@@ -37,7 +37,7 @@ def review_all(client, sid, obs):
 
 def test_health_reports_demo_mode_explicitly(client):
     h = client.get("/api/health").json()
-    assert h["provider"] == "demo" and h["demo_mode"] is True and h["model"] is None
+    assert h["provider"] == "demo" and h["demo_mode"] is True and h["model"] is None and h["ready"] is True and h["model_loaded"] is False
     assert "no model" in h["message"].lower()
 
 

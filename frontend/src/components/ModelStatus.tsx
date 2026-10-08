@@ -9,7 +9,7 @@ export default function ModelStatus({ health, checking, onRecheck }: { health: H
   if (health.demo_mode) {
     tone = "warn";
     icon = "!";
-    headline = "Demo mode · no model";
+    headline = "No model is running";
   } else if (!health.reachable) {
     headline = `${health.provider === "ollama" ? "Ollama" : "Gemini API"} not reachable`;
   } else if (!health.model_installed) {
@@ -30,7 +30,7 @@ export default function ModelStatus({ health, checking, onRecheck }: { health: H
         <strong>{health.demo_mode ? "DEMO" : "Gemma 4"}</strong>
         {health.model ? <> · <span className="mono">{health.model}</span></> : null}
         <span className="model-status-sub">
-          {health.runtime ? `${health.runtime} · ` : ""}
+          {health.demo_mode ? "" : health.runtime ? `${health.runtime} · ` : ""}
           {headline}
         </span>
       </span>

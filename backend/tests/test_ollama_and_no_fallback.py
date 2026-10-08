@@ -272,3 +272,18 @@ def test_synthetic_fixtures_exist_only_in_explicit_demo_mode(client, monkeypatch
     assert r.status_code == 404
     assert all(f["synthetic"] for f in main.list_fixtures().values())
     assert all(f["title"].startswith("SYNTHETIC") for f in main.list_fixtures().values())
+
+
+def test_real_sample_photos_are_listed_only_when_present(client, monkeypatch, tmp_path, fixture_photo):
+    monkeypatch.setattr(main, "settings", replace(main.settings, samples_dir=tmp_path))
+    assert client.get("/api/samples").json() == []
+    assert client.get("/api/samples/correct/image").status_code == 404
+    jpeg, _ = fixture_photo("corrected")  # stand-in bytes: the endpoint logic does not care what the photo shows
+    (tmp_path / "correct.jpg").write_bytes(jpeg)
+    listed = client.get("/api/samples").json()
+    assert [s["id"] for s in listed] == ["correct"] and listed[0]["filename"] == "correct.jpg"
+    assert client.get("/api/samples/correct/image").status_code == 200
+    r = client.post("/api/sessions/sample", json={"template_id": "uno_d9_led_220r", "sample_id": "correct"})
+    assert r.status_code == 200 and r.json()["fixture_id"] is None  # a normal session, not a synthetic-fixture one
+    assert client.post("/api/sessions/sample", json={"template_id": "uno_d9_led_220r", "sample_id": "../etc"}).status_code == 404
+    assert client.post("/api/sessions/sample", json={"template_id": "nope", "sample_id": "correct"}).status_code == 404

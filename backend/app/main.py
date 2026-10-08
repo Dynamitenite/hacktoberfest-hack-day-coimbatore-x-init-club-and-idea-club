@@ -187,6 +187,7 @@ def _provider_health() -> dict:
     if name == "demo":
         base.update(
             runtime="demo (no model)",
+            ready=True,  # scripted fixtures are always available; the UI shows the DEMO banner instead of a model status
             message="DEMO MODE: no model is analyzing this image. Scripted synthetic fixtures only.",
         )
         return base
