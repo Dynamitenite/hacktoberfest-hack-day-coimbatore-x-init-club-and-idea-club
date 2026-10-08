@@ -1,11 +1,10 @@
-"use client";
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import type {
-  Calibration, Candidate, Fixture, Health, Observation, Point, ProviderInfo, Report, Session, TemplateDetail, TemplateSummary,
+  Calibration, Candidate, Fixture, Health, Observation, Point, ProviderInfo, Report, Sample, Session, TemplateDetail, TemplateSummary,
 } from "@/lib/types";
 import FindingsPanel from "./FindingsPanel";
+import ModelStatus from "./ModelStatus";
 import ObservationEditor from "./ObservationEditor";
 import ObservationList from "./ObservationList";
 import PhotoCanvas, { LANDMARK_ORDER } from "./PhotoCanvas";
@@ -34,7 +33,9 @@ function defaultLandmarks(w: number, h: number): Record<string, Point> {
 export default function WirewiseApp() {
   const [health, setHealth] = useState<Health | null>(null);
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
-  const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [fixtures, setFixtures] = useState<Fixture[]>([]); // synthetic test fixtures, served only in explicit demo mode
+  const [samples, setSamples] = useState<Sample[]>([]); // real sample photos from the repo's fixtures/ folder
+  const [checkingHealth, setCheckingHealth] = useState(false);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [detail, setDetail] = useState<TemplateDetail | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
@@ -47,7 +48,6 @@ export default function WirewiseApp() {
   const [analyzed, setAnalyzed] = useState(false);
   const [obs, setObs] = useState<Observation[]>([]);
   const [provider, setProvider] = useState<ProviderInfo | null>(null);
-  const [chosen, setChosen] = useState<"gemma" | "demo">("demo");
   const [warnings, setWarnings] = useState<string[]>([]);
   const [report, setReport] = useState<Report | null>(null);
 
@@ -69,11 +69,11 @@ export default function WirewiseApp() {
   useEffect(() => {
     (async () => {
       try {
-        const [h, t, f] = await Promise.all([api.health(), api.templates(), api.fixtures()]);
+        const [h, t, f, sm] = await Promise.all([api.health(), api.templates(), api.fixtures(), api.samples()]);
         setHealth(h);
         setTemplates(t);
         setFixtures(f);
-        setChosen(h.default_provider);
+        setSamples(sm);
         if (t[0]) setTemplateId(t[0].id);
       } catch (e) {
         setBootError(e instanceof ApiError ? e.message : "Could not start Wirewise.");
@@ -85,6 +85,25 @@ export default function WirewiseApp() {
     if (!templateId) return;
     api.template(templateId).then(setDetail).catch((e) => setBootError(e.message));
   }, [templateId]);
+
+  const recheckHealth = useCallback(async () => {
+    setCheckingHealth(true);
+    try {
+      setHealth(await api.health());
+    } catch {
+      /* the backend itself is unreachable; the next API call reports it */
+    } finally {
+      setCheckingHealth(false);
+    }
+  }, []);
+
+  // Keep the header status honest while the page is open (Ollama can be started or stopped at any time).
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      if (!document.hidden) recheckHealth();
+    }, 20000);
+    return () => window.clearInterval(t);
+  }, [recheckHealth]);
 
   const run = useCallback(async <T,>(label: Busy, fn: () => Promise<T>): Promise<T | undefined> => {
     setBusy(label);
@@ -124,6 +143,12 @@ export default function WirewiseApp() {
     if (s) beginSession(s, s.suggested_landmarks ? "Corners were placed automatically from the photo. Check each one." : "Drag the four handles onto the corner holes.");
   };
 
+  const startFromSample = async (sm: Sample) => {
+    if (!templateId) return;
+    const s = await run("upload", () => api.sampleSession(templateId, sm.id));
+    if (s) beginSession(s, "Sample photo loaded. Drag the four handles onto the corner holes, then check the grid.");
+  };
+
   const startFromFixture = async (f: Fixture) => {
     if (!templateId) return;
     const s = await run("upload", () => api.demoSession(templateId, f.id));
@@ -161,8 +186,9 @@ export default function WirewiseApp() {
     if (!session) return;
     const r = await run("analyze", async () => {
       if (acceptLow) setCal(await api.acceptCalibration(session.id));
-      return api.analyze(session.id, chosen, acceptLow);
+      return api.analyze(session.id, acceptLow);
     });
+    if (!r) recheckHealth(); // the failure may be "model unavailable": refresh the header status and setup panel
     if (r) {
       setObs(r.observations);
       setProvider(r.provider);
@@ -242,7 +268,7 @@ export default function WirewiseApp() {
     () => new Set(obs.filter((o) => (o.observation_type === "component" || o.observation_type === "wire") && o.candidate_part_or_endpoint.part_id).map((o) => o.id)),
     [obs],
   );
-  const demoActive = (provider?.is_demo ?? chosen === "demo") && (health?.demo_mode || chosen === "demo");
+  const demoActive = !!health?.demo_mode;
   const rectifiedSrc = session && cal && cal.status !== "failed" ? api.rectifiedUrl(session.id, calNonce) : undefined;
   const reviewRemaining = obs.filter((o) => (o.observation_type === "component" || o.observation_type === "wire") && o.status === "proposed").length;
 
@@ -280,8 +306,7 @@ export default function WirewiseApp() {
     <>
       {demoActive && (
         <div className="demo-band" role="status">
-          DEMO MODE: no live Gemma call. Proposals come from recorded fixtures and work only on the bundled demo photos.
-          {!health.gemma_available ? " Set GEMINI_API_KEY on the server to use Gemma 4." : ""}
+          DEMO MODE: no model is analyzing this image. Observations are scripted demo data for the bundled SYNTHETIC test photos only.
         </div>
       )}
       <header className="topbar">
@@ -316,6 +341,8 @@ export default function WirewiseApp() {
             </div>
           ))}
         </nav>
+        <div className="spacer" />
+        <ModelStatus health={health} checking={checkingHealth} onRecheck={recheckHealth} />
       </header>
 
       <main className="page">
@@ -410,22 +437,41 @@ export default function WirewiseApp() {
                 </div>
               </section>
 
-              <section className="panel" aria-labelledby="demo-h">
-                <h2 id="demo-h">No build on hand? Try a demo photo</h2>
-                <p className="small muted" style={{ margin: "6px 0 10px" }}>Synthetic renders of this circuit. They work in demo mode without any API key.</p>
-                <div className="stack" style={{ gap: 10 }}>
-                  {fixtures.map((f) => (
-                    <button key={f.id} type="button" className="fixture" disabled={busy === "upload"} onClick={() => startFromFixture(f)}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={`/api/fixtures/${f.id}/image`} alt="" />
-                      <span>
-                        <strong>{f.title}</strong>
-                        <span className="small muted" style={{ display: "block" }}>{f.description}</span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </section>
+              {samples.length > 0 && (
+                <section className="panel" aria-labelledby="sample-h">
+                  <h2 id="sample-h">Or start from a sample photo</h2>
+                  <p className="small muted" style={{ margin: "6px 0 10px" }}>Real photos of the physical build, bundled with Wirewise. They go through the same calibration and Gemma 4 analysis as your own photo.</p>
+                  <div className="stack" style={{ gap: 10 }}>
+                    {samples.map((sm) => (
+                      <button key={sm.id} type="button" className="fixture" disabled={busy === "upload"} onClick={() => startFromSample(sm)}>
+                        <img src={api.sampleImageUrl(sm.id)} alt="" />
+                        <span>
+                          <strong>{sm.title}</strong>
+                          <span className="small muted" style={{ display: "block" }}>{sm.description}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {health.demo_mode && fixtures.length > 0 && (
+                <section className="panel" aria-labelledby="demo-h">
+                  <h2 id="demo-h">Synthetic test photos (demo mode only)</h2>
+                  <p className="small muted" style={{ margin: "6px 0 10px" }}>Computer-generated renders used for automated testing. No model analyzes them: their observations are scripted.</p>
+                  <div className="stack" style={{ gap: 10 }}>
+                    {fixtures.map((f) => (
+                      <button key={f.id} type="button" className="fixture" disabled={busy === "upload"} onClick={() => startFromFixture(f)}>
+                        <img src={`/api/fixtures/${f.id}/image`} alt="" />
+                        <span>
+                          <strong>{f.title}</strong>
+                          <span className="small muted" style={{ display: "block" }}>{f.description}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           </div>
         )}
@@ -439,7 +485,7 @@ export default function WirewiseApp() {
                   <h2 id="photo-h">{analyzed ? "Review what Gemma proposed" : "Mark the breadboard corners"}</h2>
                   {analyzed && provider ? (
                     <span className="badge" data-tone={provider.is_demo ? "warn" : "plain"}>
-                      {provider.is_demo ? "Demo fixture, not a live model" : `Proposed by Gemma 4 · ${provider.model}`}
+                      {provider.is_demo ? "DEMO DATA: no model ran" : `Proposed by Gemma 4 · ${provider.model} · ${provider.runtime}`}
                     </span>
                   ) : null}
                 </div>
@@ -505,26 +551,29 @@ export default function WirewiseApp() {
 
                   {cal && cal.status !== "failed" && (
                     <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-                      <fieldset style={{ border: 0, margin: 0, padding: 0 }}>
-                        <legend style={{ fontWeight: 700, marginBottom: 6 }}>Who looks at the photo?</legend>
-                        <label style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 6 }}>
-                          <input type="radio" name="prov" checked={chosen === "gemma"} disabled={!health.gemma_available} onChange={() => setChosen("gemma")} />
-                          <span>
-                            Gemma 4 <span className="muted small">({health.gemma_model}, called from the server)</span>
-                            {!health.gemma_available && <span className="small muted" style={{ display: "block" }}>Unavailable: no GEMINI_API_KEY on the server.</span>}
-                          </span>
-                        </label>
-                        <label style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                          <input type="radio" name="prov" checked={chosen === "demo"} onChange={() => setChosen("demo")} />
-                          <span>Demo provider <span className="muted small">(recorded fixtures, bundled demo photos only)</span></span>
-                        </label>
-                      </fieldset>
+                      {!health.ready && !health.demo_mode ? (
+                        <div className="unavailable" role="alert">
+                          <strong>Gemma 4 is unavailable, so Wirewise cannot analyze this photo.</strong>
+                          <p className="small">{health.message}</p>
+                          {health.setup_hint && <pre>{health.setup_hint}</pre>}
+                          <p className="small">Wirewise never switches to demo data on its own. After fixing this, check again.</p>
+                          <div className="btn-row">
+                            <button type="button" className="btn btn-small" onClick={recheckHealth} disabled={checkingHealth}>{checkingHealth ? "Checking…" : "Check again"}</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="small muted">
+                          {health.demo_mode
+                            ? "Demo mode: scripted proposals, no model."
+                            : <>Gemma 4 (<span className="mono">{health.model}</span>, {health.runtime}) will look at this one photo. On a CPU this can take up to {health.timeout_seconds} s{health.model_loaded ? "" : "; the first run also loads the model"}.</>}
+                        </p>
+                      )}
                       <div className="btn-row">
-                        <button type="button" className="btn btn-primary" disabled={busy === "analyze" || (cal.status === "low_confidence")} onClick={() => analyze(false)}>
-                          {busy === "analyze" ? <Spinner label={chosen === "gemma" ? "Asking Gemma 4…" : "Loading demo proposals…"} /> : "Find parts and wires"}
+                        <button type="button" className="btn btn-primary" disabled={busy === "analyze" || (cal.status === "low_confidence") || !health.ready} onClick={() => analyze(false)}>
+                          {busy === "analyze" ? <Spinner label={health.demo_mode ? "Loading demo proposals…" : "Asking Gemma 4…"} /> : "Find parts and wires"}
                         </button>
                         {cal.status === "low_confidence" && (
-                          <button type="button" className="btn btn-quiet" disabled={busy === "analyze"} onClick={() => analyze(true)}>
+                          <button type="button" className="btn btn-quiet" disabled={busy === "analyze" || !health.ready} onClick={() => analyze(true)}>
                             Use this grid anyway
                           </button>
                         )}
@@ -542,7 +591,7 @@ export default function WirewiseApp() {
                   </div>
                   {warnings.map((w) => <p key={w} className="small" style={{ marginBottom: 6, fontWeight: 600, color: "var(--warn)" }}>{w}</p>)}
                   <p className="small muted" style={{ marginBottom: 12 }}>
-                    {provider?.is_demo ? "These proposals are scripted for the demo photo. " : "Gemma 4 looked at the photo and proposed these. "}
+                    {provider?.is_demo ? "DEMO DATA: these proposals are scripted for a synthetic test photo; no model analyzed anything. " : `Gemma 4 (${provider?.model}, ${provider?.runtime}) looked at the photo and proposed these. `}
                     Nothing becomes part of the circuit until you confirm it. Wirewise, not the model, decides what differs from the template.
                   </p>
                   <div className="btn-row" style={{ marginBottom: 14 }}>

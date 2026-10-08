@@ -71,6 +71,8 @@ class Settings:
     # One timeout for every model call; no retry loops.
     gemma_timeout_s: float = field(default_factory=lambda: float(os.getenv("GEMMA_TIMEOUT_SECONDS", "60")))
 
+    # Real demo photos (correct.jpg, wrong_wire.jpg, blurry.jpg) live outside backend/, in the repo-root fixtures/ folder.
+    samples_dir: Path = field(default_factory=lambda: Path(os.getenv("WIREWISE_SAMPLES_DIR", str(BACKEND_DIR.parent / "fixtures"))))
     max_upload_mb: float = field(default_factory=lambda: float(os.getenv("MAX_UPLOAD_MB", "10")))
     session_ttl_minutes: int = field(default_factory=lambda: int(os.getenv("SESSION_TTL_MINUTES", "120")))
     database_path: Path = field(

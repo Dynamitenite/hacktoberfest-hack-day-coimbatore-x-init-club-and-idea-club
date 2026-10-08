@@ -1,5 +1,5 @@
 import type {
-  AnalyzeResponse, Calibration, Candidate, Fixture, Health, Observation, Point, Report, Session, TemplateDetail, TemplateSummary,
+  AnalyzeResponse, Calibration, Candidate, Fixture, Health, Observation, Point, Report, Sample, Session, TemplateDetail, TemplateSummary,
 } from "./types";
 
 export class ApiError extends Error {
@@ -10,7 +10,7 @@ export class ApiError extends Error {
   }
 }
 
-// Same-origin: Next.js proxies /api to the FastAPI backend (see next.config.ts).
+// Same-origin: the Vite dev server proxies /api to the FastAPI backend (see vite.config.ts).
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
@@ -50,6 +50,10 @@ export const api = {
     fd.append("file", file);
     return call<Session>("/api/sessions", { method: "POST", body: fd });
   },
+  samples: () => call<Sample[]>("/api/samples"),
+  sampleImageUrl: (id: string) => `/api/samples/${id}/image`,
+  sampleSession: (templateId: string, sampleId: string) =>
+    call<Session>("/api/sessions/sample", json("POST", { template_id: templateId, sample_id: sampleId })),
   demoSession: (templateId: string, fixtureId: string) =>
     call<Session>("/api/sessions/demo", json("POST", { template_id: templateId, fixture_id: fixtureId })),
   deleteSession: (sid: string) => call<void>(`/api/sessions/${sid}`, { method: "DELETE" }),
@@ -57,8 +61,9 @@ export const api = {
   rectifiedUrl: (sid: string, nonce: number) => `/api/sessions/${sid}/rectified.jpg?n=${nonce}`,
   calibrate: (sid: string, points: Record<string, Point>) => call<Calibration>(`/api/sessions/${sid}/calibrate`, json("POST", { points })),
   acceptCalibration: (sid: string) => call<Calibration>(`/api/sessions/${sid}/calibration/accept`, json("POST")),
-  analyze: (sid: string, provider?: "gemma" | "demo", acceptUnverified = false) =>
-    call<AnalyzeResponse>(`/api/sessions/${sid}/analyze`, json("POST", { provider, accept_unverified_calibration: acceptUnverified })),
+  // The server decides which provider runs (VISION_PROVIDER); the browser cannot pick or substitute one.
+  analyze: (sid: string, acceptUnverified = false) =>
+    call<AnalyzeResponse>(`/api/sessions/${sid}/analyze`, json("POST", { accept_unverified_calibration: acceptUnverified })),
   act: (sid: string, oid: string, action: "confirm" | "reject" | "reset", note?: string) =>
     call<Observation>(`/api/sessions/${sid}/observations/${oid}`, json("PATCH", { action, note })),
   correct: (sid: string, oid: string, candidate: Candidate, note?: string) =>

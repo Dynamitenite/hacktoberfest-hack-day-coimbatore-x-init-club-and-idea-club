@@ -1,5 +1,3 @@
-"use client";
-
 import type { Finding, Report, TemplateDetail } from "@/lib/types";
 import TwinTrace from "./TwinTrace";
 import { SOURCE_LABEL, StateBadge } from "./ui";

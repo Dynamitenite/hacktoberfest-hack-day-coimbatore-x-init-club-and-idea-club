@@ -1,4 +1,4 @@
-import type { Confidence, Endpoint, ObsStatus, ResultState, Source } from "@/lib/types";
+import type { Confidence, Endpoint, Observation, ObsStatus, ResultState, Source } from "@/lib/types";
 
 const STATE_TONE: Record<ResultState, string> = {
   "MATCHES TEMPLATE": "ok",
@@ -24,7 +24,7 @@ export function StateBadge({ state }: { state: ResultState }) {
 
 export const SOURCE_LABEL: Record<Source, string> = {
   gemma: "Gemma 4 proposed",
-  demo: "Demo fixture",
+  demo: "DEMO DATA (no model)",
   opencv: "OpenCV",
   user: "You",
 };
@@ -36,6 +36,14 @@ export function SourceBadge({ source }: { source: Source }) {
       {SOURCE_LABEL[source]}
     </span>
   );
+}
+
+/** Model name and runtime that proposed an observation (shown on every Gemma proposal). */
+export function modelLine(o: Pick<Observation, "source" | "model_name" | "runtime" | "original_source">): string | null {
+  if (o.source === "demo") return "Demo data: no model ran";
+  const proposedByModel = o.source === "gemma" || o.original_source === "gemma";
+  if (!proposedByModel || !o.model_name) return null;
+  return `${o.model_name} · ${o.runtime ?? "unknown runtime"}`;
 }
 
 const STATUS_TEXT: Record<ObsStatus, { text: string; tone: string; icon: string }> = {

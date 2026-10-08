@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Candidate, Endpoint, Observation, TemplateDetail } from "@/lib/types";
 import { Spinner } from "./ui";

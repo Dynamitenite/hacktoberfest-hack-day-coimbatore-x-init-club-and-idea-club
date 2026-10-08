@@ -51,6 +51,13 @@ from .schemas import (
 from .storage import Database, SessionState, SessionStore
 from .vision_provider import OllamaProvider, ProposeContext, ProviderError, get_provider, list_fixtures, normalize
 
+# Real photos of the physical build, shipped in the repo-root fixtures/ folder. Only files that exist are offered.
+SAMPLE_PHOTOS = {
+    "correct": ("correct.jpg", "Real photo: correct build", "The build wired as the template describes."),
+    "wrong_wire": ("wrong_wire.jpg", "Real photo: seeded wiring mistake", "The same build with one deliberate wiring mistake."),
+    "blurry": ("blurry.jpg", "Real photo: blurry", "A deliberately blurry photo. Wirewise should ask for review rather than pass it."),
+}
+
 PX_PER_PITCH = 28
 MARGIN_PITCH = 2.0
 
@@ -258,6 +265,30 @@ def fixture_image(fixture_id: str):
     return Response(Path(meta["_photo"]).read_bytes(), media_type="image/jpeg")
 
 
+def _sample_path(sample_id: str) -> Path:
+    entry = SAMPLE_PHOTOS.get(sample_id)
+    path = settings.samples_dir / entry[0] if entry else None
+    if not entry or path is None or not path.is_file():
+        raise HTTPException(404, "Unknown sample photo.")
+    return path
+
+
+@app.get("/api/samples")
+def samples():
+    """Real sample photos found in the fixtures/ folder (never the synthetic test fixtures)."""
+    return [
+        {"id": sid, "title": title, "description": desc, "filename": filename}
+        for sid, (filename, title, desc) in SAMPLE_PHOTOS.items()
+        if (settings.samples_dir / filename).is_file()
+    ]
+
+
+@app.get("/api/samples/{sample_id}/image")
+def sample_image(sample_id: str):
+    path = _sample_path(sample_id)
+    return Response(path.read_bytes(), media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+
+
 # --------------------------------------------------------------------------- sessions
 
 
@@ -270,6 +301,19 @@ async def create_session(template_id: str = Form(...), file: UploadFile = File(.
     data = await file.read(limit + 1)
     try:
         img = validate_and_normalize(data, file.content_type, settings.max_upload_mb)
+    except UploadError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return _new_session(template_id, img.jpeg_bytes, img.width, img.height).session
+
+
+@app.post("/api/sessions/sample", response_model=ImageSession)
+def create_sample_session(body: dict):
+    """Start a normal session from one of the real sample photos (same validation as an upload)."""
+    template_id = body.get("template_id")
+    _tpl(template_id or "")
+    jpeg = _sample_path(str(body.get("sample_id") or "")).read_bytes()
+    try:
+        img = validate_and_normalize(jpeg, "image/jpeg", settings.max_upload_mb)
     except UploadError as exc:
         raise HTTPException(422, str(exc)) from exc
     return _new_session(template_id, img.jpeg_bytes, img.width, img.height).session

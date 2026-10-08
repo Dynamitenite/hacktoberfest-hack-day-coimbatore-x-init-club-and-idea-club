@@ -1,7 +1,5 @@
-"use client";
-
 import type { Observation } from "@/lib/types";
-import { ConfidenceBadge, endpointText, SourceBadge, StatusBadge } from "./ui";
+import { ConfidenceBadge, endpointText, modelLine, SourceBadge, StatusBadge } from "./ui";
 
 type Props = {
   observations: Observation[];
@@ -33,6 +31,8 @@ function Card({ o, selected, busy, onSelect, onAct, onEdit, onRemove }: { o: Obs
         <SourceBadge source={o.source} />
         <ConfidenceBadge level={o.confidence_label} />
       </div>
+
+      {modelLine(o) ? <p className="small muted" style={{ marginTop: 4 }}>Model: {modelLine(o)}</p> : null}
 
       {eps.length > 0 && (
         <dl className="obs-ends" style={{ margin: "0.45rem 0" }}>

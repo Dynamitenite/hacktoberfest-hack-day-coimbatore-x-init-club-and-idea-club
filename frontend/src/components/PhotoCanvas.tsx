@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo, useRef, useState } from "react";
 import type { Calibration, Finding, Observation, Point, ResultState } from "@/lib/types";
 

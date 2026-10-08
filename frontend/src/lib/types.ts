@@ -45,6 +45,9 @@ export type Observation = {
   original_candidate?: Candidate | null;
   original_source?: Source | null;
   display_name: string;
+  model_name?: string | null; // model that proposed this (null for user / OpenCV-only observations)
+  runtime?: string | null;
+  is_demo_data?: boolean; // scripted synthetic fixture, not model output
 };
 
 export type CalibrationMetrics = {
@@ -74,7 +77,8 @@ export type Session = {
   calibration_points?: Record<string, Point> | null;
 };
 
-export type ProviderInfo = { name: "gemma" | "demo"; model?: string | null; integration: string; is_demo: boolean; detail?: string | null };
+export type ProviderName = "ollama" | "gemini" | "demo";
+export type ProviderInfo = { name: ProviderName; model?: string | null; runtime: string; integration: string; is_demo: boolean; detail?: string | null };
 export type AnalyzeResponse = { observations: Observation[]; provider: ProviderInfo; warnings: string[] };
 
 export type Finding = {
@@ -162,12 +166,20 @@ export type Diagram = {
 };
 
 export type Fixture = { id: string; title: string; description: string; synthetic: boolean };
+export type Sample = { id: string; title: string; description: string; filename: string };
 export type Health = {
   status: string;
-  default_provider: "gemma" | "demo";
-  gemma_available: boolean;
-  gemma_model: string;
+  provider: ProviderName;
+  model: string | null;
+  runtime: string | null;
   demo_mode: boolean;
+  reachable: boolean;
+  model_installed: boolean;
+  model_loaded: boolean;
+  ready: boolean;
+  message: string;
+  setup_hint: string | null;
+  timeout_seconds: number;
   max_upload_mb: number;
   allowed_types: string[];
 };
