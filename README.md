@@ -1,219 +1,327 @@
 # Wirewise
 
-**Check your breadboard against the circuit you meant to build.**
-
-Wirewise compares a photo of a low-voltage breadboard circuit with an intended circuit template. **Gemma 4** looks at the photo and *proposes* what it sees (parts, wires, resistor colour bands, rough positions). You confirm, reject or correct each proposal. A deterministic graph comparison then reports where the confirmed wiring differs from the template, with the evidence for every finding.
-
-It is an inspection and learning aid. It never powers, controls or talks to hardware, and it never says a circuit is safe to power.
-
-Built for Hacktoberfest Hack Day, Coimbatore 2026 (organized by INIT CLUB × iDEA CLUB with Major League Hacking): main track plus the "Best Use of Gemma 4" challenge.
-
-- **Model (demo configuration):** Gemma 4 `gemma-4-31b-it`, hosted via the Gemini API (`VISION_PROVIDER=gemini`)
-- **Also supported:** `gemma-4-26b-a4b-it` (hosted), and a local Gemma 4 through Ollama (`gemma4:e4b`, `VISION_PROVIDER=ollama`)
-- **License:** Apache-2.0
+> A visual inspection and learning tool that uses computer vision and Gemma 4 to compare real breadboard circuit photos against target circuit schematics.
 
 ## Team
 
-> **To be filled in by the team before submission:** team name, members and each member's contributions. (Not filled in automatically, to avoid inventing information.)
+**Team Name:** Team Vitality
 
-## Problem statement
 
-A wire one row off, a swapped LED polarity, or the wrong resistor is easy to miss on a breadboard, and a photo is how makers and students usually ask for help. A vision-language model alone can be confidently wrong about a photo, and "it looks right" is not a check. The target users are beginners, students and makers building small low-voltage Arduino circuits who want a second pair of eyes that shows its evidence.
+| Member | Contribution   |
+| ------ | -------------- |
+| Aakaash Pavangat | Designed and built the Next.js App Router frontend, interactive Canvas/SVG image annotation tools, breadboard calibration handle controls, and the visual findings report UI.|
+| Tanala Phanendra | Integrated the Gemma 4 vision model API, engineered structured prompts for candidate component/wire extraction, architected the server-side provider adapter, and created the offline demo provider fallback.|
+| Mohammad Liyakat Ali | Developed the OpenCV image processing pipeline, implemented the 4-point perspective warp transformation algorithms, and mapped physical photo coordinates to breadboard pin grids. |
+| Govind Shrundan Reddy | Architected the FastAPI backend server, built the NetworkX deterministic graph comparison engine, defined the Pydantic data models, and implemented the catalog rules validator. |
 
-Why this problem: the failure is common and cheap to make, the ground truth (a netlist) is small and exact, and that makes it a good fit for "a model proposes, code decides". *(Team: edit this paragraph if your own reason for choosing the problem differs.)*
 
-## Solution
+## Problem Statement
 
-1. **Choose a circuit.** One verified template ships: an Arduino UNO R3 pin D9 driving a 5 mm red LED through a 220 Ω resistor, on a half-size 400-point breadboard. You see the schematic and the expected connections before uploading anything.
-2. **Inspect your photo.** Upload a JPEG, PNG or WebP (type and size validated). Drag four corner handles onto the breadboard holes `a1`, `a30`, `j30`, `j1`. Wirewise computes a perspective correction, draws a hole grid and checks that it really lands on holes. If it does not, it asks you to adjust instead of guessing.
-3. **Review proposals.** Gemma 4 proposes parts and wire endpoints with a confidence label. Each proposal shows its source and the **model name and runtime** that produced it. Proposals are not facts until you confirm them; you can reject, correct hole or pin positions, or add something the model missed.
-4. **Review findings.** A graph is built only from confirmed observations and compared with the template. The report is one of `MATCHES TEMPLATE`, `POSSIBLE MISMATCH`, `NEEDS REVIEW`, `NOT CHECKED`. Findings are grouped, each with the evidence used, the rule applied, a "Show on photo" jump to the image region and a "Show expected link" jump to the schematic.
+### The Problem
 
-Finding types: wrong row, wrong pin, polarity mismatch, missing connection, unexpected connection, resistor value mismatch (from colour bands you confirmed), ambiguous, not checked.
+Electronics hobbyists, students, and educators working with solderless breadboards frequently run into small, hard-to-spot wiring errors. Miscounting a breadboard row by a single pin, placing a component across the wrong power rail, or inserting a polarized diode backward can cause a circuit to fail silently or behave unpredictably.
 
-## Innovation and differentiation
+Tracing physical circuits manually against a schematic is time-consuming and error-prone, especially for beginners. While modern software development relies on automated visual diffs and linters to catch mistakes instantly, physical prototyping lacks a reliable way to compare an assembled physical circuit against an intended wiring plan. Traditional computer vision struggles with the complex angles and overlapping wires of real-world breadboards, while raw AI vision models risk hallucinating connections or making unverified safety assumptions if relied on blindly.
 
-- **The model proposes, you confirm, code decides.** Gemma 4 never makes the pass/fail call. The verdict comes from NetworkX graph comparison over *confirmed* observations, template rules and a sourced parts catalog, so every finding is traceable and testable.
-- **Provenance everywhere.** Every observation and graph edge records where it came from (Gemma 4 with model and runtime, OpenCV, the catalog, or you).
-- **OpenCV covers what the model is weak at.** Gemma 4 gives coarse positions; OpenCV snaps them to the calibrated hole grid, and calibration refuses to continue on a grid that does not line up.
-- **No silent fallback.** If the Gemma provider is unavailable, times out or has no key, the app shows an error with setup steps. It never switches to another provider or to demo data.
-- **Honest wording.** It reports "the confirmed connections match this template" or "possible mismatch", keeps hidden or unconfirmed details unknown, and never calls a circuit safe.
+### Why We Chose This Problem
 
-## Technical implementation
+Hardware debugging remains one of the steepest learning curves in STEM education and maker environments. Misplaced wires often lead to hours of unnecessary troubleshooting, student frustration, and abandoned projects.
 
+We selected this problem to demonstrate how open-weight vision models like Gemma 4 can be combined with deterministic graph logic to solve a genuine physical-world friction point. By keeping the AI focused on visual proposal and using deterministic graph algorithms for the actual circuit comparison, we create a reliable, visual linter for physical hardware that accelerates learning without compromising safety.
+
+
+
+## Solution Overview
+
+Wirewise is a web-based visual inspection and learning application that compares a photograph of a physical, low-voltage breadboard circuit against a verified schematic template.
+
+### Core Workflow
+
+Wirewise guides users through a structured, human-in-the-loop inspection process:
+
+1. **Interactive Calibration**  
+   Upload a top-down photo of your breadboard and align key grid landmarks to correct perspective distortion using OpenCV.
+
+2. **AI-Assisted Vision Proposals**  
+   Gemma 4 analyzes the calibrated image to propose candidate components, wire endpoints, labels, and visible orientation with confidence scores.
+
+3. **Human Verification**  
+   Confirm, reject, or adjust the proposed observations. No uncertain model guess is ever silently accepted as a confirmed connection without user approval.
+
+4. **Deterministic Graph Comparison**  
+   Confirmed observations are compiled into an electrical connection graph and evaluated against the target template using NetworkX graph matching.
+
+5. **Evidence-Based Reporting**  
+   Wirewise overlays findings—such as missing wires, misplaced rows, or polarity errors—directly onto the original photo with clear explanations and pinpointed image regions.
+
+
+### Key Features
+
+* **Interactive Perspective & Grid Calibration**  
+  Uses OpenCV 4-point landmark alignment to correct lens distortion and map physical breadboard coordinates directly onto top-down circuit photos.
+
+* **Gemma 4 AI Vision Proposals**  
+  Leverages Gemma 4 multimodal vision to identify component types, pin markings, wire endpoints, and polarity orientation with confidence scores and bounding polygons.
+
+* **Human-in-the-Loop Verification System**  
+  Provides an interactive review interface that requires explicit user confirmation or correction before turning visual detections into electrical connections.
+
+* **Deterministic Graph Engine & Evidence Overlay**  
+  Compiles verified connections into NetworkX graphs to evaluate expected vs. observed wiring, overlaying color-coded findings directly onto photo regions with plain-language explanations.
+## Innovation and Differentiation
+
+Wirewise introduces a novel approach to physical hardware inspection by bridging computer vision, open-weight multimodal AI, and deterministic graph theory. Unlike conventional hardware debugging tools or pure AI vision demonstrations, Wirewise differs key ways:
+
+### 1. Hybrid Perception-Logic Architecture
+Traditional AI applications often try to perform both visual recognition and safety reasoning inside a single large language model—a method prone to dangerous hallucinations and unverified electrical claims. Wirewise strictly separates these concerns:
+* **Gemma 4** handles **visual perception** (proposing candidate components, labels, and wire endpoints).
+* **NetworkX** handles **electrical reasoning** (deterministically evaluating the graph topology against verified catalog rules).
+
+### 2. Geometric & Spatial Breadboard Grounding
+Standard computer vision models output loose bounding boxes that fail to capture spatial precision on dense breadboard grids. Wirewise combines OpenCV 4-point perspective warp matrices with Gemma 4's visual observations, mapping 2D pixel coordinates directly onto physical breadboard row-and-column locations (e.g., mapping a wire tip to hole `a12` of the calibrated grid).
+
+### 3. Human-in-the-Loop Verification Safeguard
+Existing automated inspection systems either require expensive industrial hardware or operate as black boxes with no human intervention. Wirewise enforces a strict human-in-the-loop workflow: model proposals remain unconfirmed candidates until explicitly validated or corrected by the user, ensuring an uncertain AI guess is never silently converted into an electrical fact.
+
+### 4. Evidence-Based "Visual Linter" for Hardware
+Software developers rely on continuous integration tools and visual diffs to catch bugs early, but physical breadboard prototyping has lacked an equivalent visual tool. Wirewise acts as a visual linter for physical electronics, highlighting exact discrepancy regions directly on top of the original photo with clear, actionable explanations linked to template rules.
+
+## Technical Implementation
+
+### Architecture
+
+```mermaid
+flowchart LR
+    U[Browser: React + TypeScript SPA<br/>Vite] -->|/api proxy| A[FastAPI backend]
+    A --> IP[image_processing<br/>validate, calibrate, rectify - OpenCV]
+    A --> VP[vision_provider]
+    VP -->|default demo config| G[Gemma 4 via Gemini API]
+    VP -.->|optional local| O[Gemma 4 via Ollama]
+    VP -.->|tests only, explicit| D[demo: scripted fixtures]
+    A --> CG[circuit_graph<br/>confirmed observations -> NetworkX]
+    CG --> C[comparison<br/>expected vs observed -> findings]
+    A --> S[(in-memory sessions<br/>SQLite for saved projects)]
 ```
-Browser (React + TypeScript SPA, Vite)  --/api-->  FastAPI backend
-                                                    ├─ image_processing  validate, calibrate (OpenCV), rectify
-                                                    ├─ vision_provider   gemini | ollama | demo (tests) -> proposals
-                                                    ├─ circuit_graph     confirmed observations -> NetworkX graph
-                                                    ├─ comparison        expected vs observed -> findings
-                                                    └─ storage           in-memory sessions, SQLite for saved projects
-```
 
-- **Frontend:** React 19, TypeScript, Vite (no server-side rendering), SVG overlays, plain CSS. The Vite dev server proxies `/api` to the backend so no key or backend URL is in browser code.
-- **Backend:** Python, FastAPI, Pydantic schemas, OpenCV, NetworkX, SQLite.
-- **Gemma 4 integration:** server-side provider adapter. One image per analysis, a configurable timeout, no automatic retries. Output is parsed leniently and treated as untrusted data (length-limited, text in the image is never obeyed).
-- **Details:** see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+### Technology Stack
 
-### How Gemma 4 contributes
+| Category        | Technologies |
+| --------------- | ------------ |
+| Frontend        | React 19, TypeScript, Vite (single-page app, no server-side rendering), SVG overlays, plain CSS |
+| Backend         | Python, FastAPI, Pydantic, OpenCV, NetworkX |
+| Database        | SQLite (explicitly saved projects); in-memory session store for photos |
+| AI / ML         | Gemma 4 (`gemma-4-31b-it`, `gemma-4-26b-a4b-it` hosted; `gemma4:e4b` local via Ollama) |
+| Infrastructure  | N/A (runs locally; no deployment) |
+| APIs / Services | Gemini API (hosts Gemma 4 for the default demo configuration); Ollama (optional local runtime) |
 
-Gemma 4 does the part that needs vision. For the image you give it, it:
+### How It Works
 
-- identifies component types: resistors, LEDs, jumper wires and the Arduino,
-- reads printed labels and resistor colour bands,
-- reports polarity cues (LED lead length, flat rim) where visible,
-- gives coarse locations of wire ends and lead entry points,
-- flags regions that are hidden or too blurry to inspect.
+1. **Choose a circuit.** One verified template ships: Arduino UNO R3 pin D9, a 220 Ω resistor and a red 5 mm LED to GND, on a half-size 400-point breadboard. Parts and pinouts come from a sourced catalog (`backend/data/catalog/parts.json`), never from model memory.
+2. **Calibrate.** The user places the four corner holes `a1`, `a30`, `j30`, `j1`. OpenCV computes the perspective transform and a hole grid, then checks the grid really lands on holes; if not, the user is asked to adjust.
+3. **Propose.** The server sends one annotated image to Gemma 4, which proposes components, wires, colour bands, polarity cues and rough positions. OpenCV snaps those positions to the calibrated grid. Every proposal records the model name and runtime and starts as `proposed`.
+4. **Confirm.** The user confirms, rejects or corrects each proposal.
+5. **Compare.** Confirmed observations become a NetworkX graph (with provenance on every node and edge) that is compared with the template. No model is involved in the verdict.
+6. **Report.** The result is `MATCHES TEMPLATE`, `POSSIBLE MISMATCH`, `NEEDS REVIEW` or `NOT CHECKED`, with evidence overlaid on the photo and a link to the template rule used.
 
-What Gemma 4 does **not** do: make the pass/fail decision; supply pixel-exact positions (OpenCV and you do); supply ratings or pinouts (those come only from `backend/data/catalog/parts.json`, with a source per part).
+### Technical Decisions
 
-Real Gemma 4 responses to the synthetic demo images are saved in [`docs/gemma_sample_response.json`](docs/gemma_sample_response.json) (31B, corrected image) and [`docs/gemma_sample_response_26b_seeded.json`](docs/gemma_sample_response_26b_seeded.json) (26B, seeded image). [docs/GEMMA_PROOF.md](docs/GEMMA_PROOF.md) is an honest assessment: Gemma found every part and wire and the seeded row-16 mistake, but called an orange decoy disc an LED, and the 26B model misread the resistor colour bands.
+- **Explicit provider, no fallback.** `VISION_PROVIDER` is `gemini`, `ollama` or `demo`. The earlier `auto` mode silently fell back to scripted data; it was removed. A failing provider produces an error with setup steps.
+- **Model proposes, code decides.** Keeps hallucinations out of the verdict and makes findings testable (85 backend tests).
+- **Coarse model positions + OpenCV snapping.** Gemma 4 is not trusted for pixel-exact endpoints.
+- **Untrusted model output.** Parsed leniently, length-limited, and text visible in an image is never obeyed.
+- **Provenance and wording.** Each item records its source (Gemma 4, OpenCV, catalog, user); results say "confirmed connections match this template", never that a circuit is safe.
+- **Vite SPA.** The earlier Next.js frontend was replaced by a Vite single-page app: no SSR is needed and the `/api` dev proxy keeps keys and backend URLs out of browser code.
 
-## Implementation during the hackathon
+More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). How Gemma 4 was assessed: [docs/GEMMA_PROOF.md](docs/GEMMA_PROOF.md).
 
-This repository started from an earlier build of Wirewise (a FastAPI backend with the catalog, circuit graph, comparison, image processing, storage and tests, plus a Next.js frontend). *(Team: confirm which parts predate the Hack Day; this section describes what happened in the Hack Day working session recorded in this repository's git history.)*
+### How Gemma 4 Contributes
 
-Done during the working session, as recorded in the git history:
+Gemma 4 identifies component types (resistors, LEDs, jumper wires, the Arduino), reads printed labels and resistor colour bands, reports polarity cues where visible, gives coarse locations of wire ends and lead entry points, and flags hidden or too-blurry regions. It does **not** make the pass/fail decision, supply exact positions, or supply ratings and pinouts.
+
+Real Gemma 4 responses to the synthetic demo images are saved in [`docs/gemma_sample_response.json`](docs/gemma_sample_response.json) (31B, corrected image) and [`docs/gemma_sample_response_26b_seeded.json`](docs/gemma_sample_response_26b_seeded.json) (26B, seeded image). In testing, Gemma found every part and wire and the seeded row-16 mistake, but called an orange decoy disc an LED, and the 26B model misread the resistor colour bands.
+
+## Implementation During the Hackathon
+
+The repository started from an earlier build of Wirewise (FastAPI backend with catalog, circuit graph, comparison, image processing, storage and tests, plus a Next.js frontend). *(Team: confirm which parts predate the Hack Day.)* Work recorded during the Hack Day working session in the git history:
 
 - Replaced the Next.js frontend with a React + TypeScript + Vite single-page app, porting the existing components.
 - Added the local Gemma 4 provider (Ollama), kept the hosted Gemini provider, removed the silent `auto` fallback to demo data, and made the provider an explicit server-side setting.
-- Added `/api/health` and a header status showing provider, model and runtime; error and "Gemma unavailable" states with setup steps.
+- Added `/api/health` and a header status with provider, model and runtime; added error and "Gemma unavailable" states with setup steps.
 - Recorded model name and runtime on every observation.
-- Labelled the bundled images as synthetic demo images, and added tests for no-silent-fallback, health, uploads of arbitrary images and blurry images (85 backend tests in total).
-- Ran real hosted Gemma 4 on the two synthetic demo images, saved real responses and wrote the assessment in [docs/GEMMA_PROOF.md](docs/GEMMA_PROOF.md).
-- Wrote the demo script, status document and this README.
+- Labelled the bundled images as synthetic demo images; added tests for no-silent-fallback, health, uploads of arbitrary and blurry images (85 backend tests in total).
+- Ran real hosted Gemma 4 on the synthetic demo images, saved real responses, and wrote the assessment in [docs/GEMMA_PROOF.md](docs/GEMMA_PROOF.md).
+- Wrote the demo script, status document and documentation.
 
-## Setup and usage
+### Team Contributions
 
-Requirements: Python 3.11+, Node.js 20.19+ (or 22.12+), and a Gemini API key for the hosted Gemma 4 path (or Ollama for the local path).
+See the **Team** table at the top of this README.
 
-### 1. Configure the provider
+## Working Application
+
+**Live Application:** [Live URL]
+
+[Briefly explain how the deployed application can be accessed and what functionality can be tested.]
+
+The submitted application should be functional and accessible through the provided link where applicable.
+
+## Demo Video
+
+**Demo Video:** [Video URL]
+
+[Provide a short demonstration of the working project, covering the main user flow and important functionality.]
+
+## Open Source and AI Usage
+
+### AI / Models
+
+- **Gemma 4 `gemma-4-31b-it` and `gemma-4-26b-a4b-it` (Google DeepMind), hosted via the Gemini API:** reads the breadboard image and proposes components, wires, colour bands and rough positions. Never decides pass/fail. Gemma 4 is released under Apache-2.0 according to Google's release; check the model card for current terms.
+- **Gemma 4 `gemma4:e4b` via [Ollama](https://ollama.com) (optional local path):** the same role, run on the user's machine. Ollama is MIT-licensed. Tested only with a mocked server, not with a real local model.
+
+### Open Source Components
+
+- **FastAPI (MIT), Uvicorn (BSD-3), Pydantic (MIT), python-multipart (Apache-2.0):** backend API and schemas.
+- **OpenCV `opencv-python-headless` (Apache-2.0), NumPy (BSD-3), Pillow (HPND):** calibration, perspective correction, image validation.
+- **NetworkX (BSD-3):** deterministic graph comparison.
+- **httpx (BSD-3), `google-genai` (Apache-2.0):** talking to Ollama and the Gemini API.
+- **React (MIT), Vite and `@vitejs/plugin-react` (MIT), TypeScript (Apache-2.0):** frontend.
+- **pytest (MIT):** tests.
+- **Fontsource packages for Bricolage Grotesque and Atkinson Hyperlegible Next (SIL OFL fonts):** typography.
+- **Data:** the parts catalog lists a source per part (for example the Arduino UNO R3 datasheet and the IEC 60062 colour code). No datasets are used. The synthetic demo images are generated by `backend/scripts/generate_fixtures.py`.
+
+Licenses above are stated from general knowledge of these projects; check each package for its current terms.
+
+## Setup and Usage
+
+### Prerequisites
+
+- Python 3.11+ and Node.js 20.19+ (or 22.12+)
+- A Gemini API key for the hosted Gemma 4 path (https://aistudio.google.com/apikey), or [Ollama](https://ollama.com/download) for the local path
+
+### Installation
 
 ```bash
+git clone <repository-url>
+cd wirewise
 cp .env.example .env              # then paste your key after GEMINI_API_KEY=
-```
 
-`.env.example` sets `VISION_PROVIDER=gemini`: Gemma 4 hosted via the Gemini API. Get a key at https://aistudio.google.com/apikey. The key is read only by the backend and never reaches the browser; `.env` is git-ignored. Without a key the header shows an error and the app refuses to analyze; it does not fall back to demo data.
-
-### 2. Backend
-
-```bash
 cd backend
 python -m venv .venv
 .venv\Scripts\activate           # Windows;  macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app.main:app --port 8000
-```
-
-### 3. Frontend
-
-```bash
-cd frontend
+cd ../frontend
 npm install
-npm run dev                       # http://localhost:5173, proxies /api to the backend
 ```
 
-Production build: `npm run build && npm run preview`.
+### Environment Variables
 
-### Environment variables (see `.env.example`)
+Defined in `.env.example` (copy to `.env`; `.env` is git-ignored and the key never reaches the browser).
 
 | Variable | Purpose |
 | --- | --- |
-| `VISION_PROVIDER` | `gemini` (hosted Gemma 4), `ollama` (local Gemma 4), or `demo` (tests only). `auto` is rejected. Server default if unset: `ollama`. |
+| `VISION_PROVIDER` | `gemini` (hosted Gemma 4, set in `.env.example`), `ollama` (local Gemma 4), or `demo` (tests only). `auto` is rejected. Server default if unset: `ollama`. |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Hosted path. Models: `gemma-4-31b-it` (default), `gemma-4-26b-a4b-it`. |
 | `OLLAMA_HOST`, `OLLAMA_MODEL`, `OLLAMA_KEEP_ALIVE` | Local path. Default model `gemma4:e4b`. |
-| `GEMMA_TIMEOUT_SECONDS` | Per-analysis timeout. Server default 60; `.env.example` uses 180 (hosted 31B took 56–62 s per image). |
+| `GEMMA_TIMEOUT_SECONDS` | Per-analysis timeout. Server default 60; `.env.example` uses 180 (hosted 31B took 56-62 s per image). |
 | `MAX_UPLOAD_MB`, `SESSION_TTL_MINUTES`, `WIREWISE_DB_PATH`, `WIREWISE_SAVED_DIR`, `CORS_ORIGINS` | Uploads, sessions, storage, CORS. |
 
-### Checking that Gemma is ready
+### Running the Project
 
-The header shows the provider (for example `gemini`), the model name, where it runs (`hosted via Gemini API`, or the local Ollama address) and whether it is usable. The same information is at `GET /api/health`. If the key is missing or rejected, Ollama is not running, the model is not installed, or a request times out, **the app shows an error with setup instructions and analyzes nothing**. Neither `gemini` nor `ollama` ever switches to another provider or to demo data.
+```bash
+# terminal 1
+cd backend && uvicorn app.main:app --port 8000
+# terminal 2
+cd frontend && npm run dev          # http://localhost:5173 (proxies /api to the backend)
+```
 
-The hosted API is sometimes overloaded (HTTP 500/503/504 were frequent for `gemma-4-31b-it` during testing). The app reports it and you press the button again; nothing is retried automatically.
+Production build: `npm run build && npm run preview`. Tests: `cd backend && pip install -r requirements-dev.txt && pytest`.
+
+### Usage
+
+Follow [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md): start from a bundled **synthetic demo image** (computer-generated, not a real photo) or upload any JPEG, PNG or WebP (at least 320 px per side), place the four corner handles, click **Check the grid**, then **Find parts and wires**, confirm or correct each proposal, and click **Check against the template**.
+
+The header shows the provider (for example `gemini`), the model name and where it runs (`hosted via Gemini API`), and whether it is usable; the same data is at `GET /api/health`. If the key is missing or rejected, Ollama is not running, the model is not installed, or a request times out, the app shows an error with setup steps and analyzes nothing. Neither `gemini` nor `ollama` ever switches to another provider or to demo data. The hosted API is sometimes overloaded (HTTP 500/503/504 were frequent for `gemma-4-31b-it` in testing); the app reports it and you press the button again. Nothing is retried automatically.
+
+`demo` is for tests only: scripted answers for the synthetic demo images, a persistent "DEMO MODE: no model is analyzing this image" banner, and every observation labelled demo data. It is enabled only by `VISION_PROVIDER=demo`.
 
 ### Optional: local Gemma 4 with Ollama
 
 ```bash
-# Install Ollama from https://ollama.com/download, start it, then:
 ollama pull gemma4:e4b        # about 9.6 GB download; roughly 10 GB of free RAM
 ```
 
-Set `VISION_PROVIDER=ollama` in `.env` (optionally `OLLAMA_MODEL`, `OLLAMA_HOST`) and restart the backend. The tag `gemma4:e4b` was checked against the [Ollama library page](https://ollama.com/library/gemma4) on 2026-10-08 (other tags: `e2b`, `12b`, `26b`, `31b`). **The local path has been tested only with a mocked Ollama server, not with a real local model.** On a machine without a GPU the first analysis loads the model and can be slow; raise `GEMMA_TIMEOUT_SECONDS` if it times out.
+Set `VISION_PROVIDER=ollama` in `.env` and restart the backend. The tag was checked against the [Ollama library page](https://ollama.com/library/gemma4) on 2026-10-08. On a machine without a GPU the first analysis loads the model and can be slow; raise `GEMMA_TIMEOUT_SECONDS` if it times out.
 
-### Providers
-
-| Value | What it is |
-| --- | --- |
-| `gemini` (set in `.env.example`) | Hosted Gemma 4 through the Gemini API. The image is sent to Google's API for the analysis. |
-| `ollama` | Optional local path: Gemma 4 on your machine through Ollama. |
-| `demo` | **Tests only.** Scripted answers for the bundled synthetic demo images, no model. Shows a persistent "DEMO MODE: no model is analyzing this image" banner and labels every observation as demo data. Only enabled by `VISION_PROVIDER=demo`. |
-
-### Using the app
-
-Follow the demo walkthrough in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md). You can start from a bundled **synthetic demo image** or upload any JPEG, PNG or WebP (at least 320 px per side, up to `MAX_UPLOAD_MB`).
-
-## Supported hardware
+### Supported Hardware
 
 | Item | Supported |
 | --- | --- |
 | Circuit | `uno_d9_led_220r`: D9 → 220 Ω resistor → red LED anode, LED cathode → GND |
 | Board | Arduino UNO R3 (header pins D8, D9, D10, GND, 5V, 3V3 in the catalog) |
-| Breadboard | Half-size 400-point, 30 rows, columns a–e and f–j, centre channel isolates |
+| Breadboard | Half-size 400-point, 30 rows, columns a-e and f-j, centre channel isolates |
 | Parts | 220 Ω resistor (red-red-brown), 5 mm red LED, jumper wire |
 
-Reference layout in the template: wire D9 → `a10`, R1 `c10` to `c14`, LED anode `d14` and cathode `d15`, wire `a15` → GND. Wirewise compares nets, not exact rows, so any electrically equivalent layout passes. Only low-voltage, allowlisted circuits are supported; mains voltage, household wiring, high-energy batteries and high-current motor circuits are out of scope.
+Wirewise compares nets, not exact rows, so any electrically equivalent layout passes. Only low-voltage, allowlisted circuits are supported; mains voltage, household wiring, high-energy batteries and high-current motor circuits are out of scope.
 
-## Limitations
+### Limitations
 
 - Tested on synthetic fixtures; accuracy on real breadboard photos has not been validated.
 - One circuit, one breadboard model. Photos of other circuits or breadboards are not supported and will not calibrate or compare meaningfully.
 - Power rails are not modelled; anything depending on them is `NOT CHECKED`.
 - Wirewise only sees what is visible and confirmed. Hidden or out-of-frame wiring, damaged parts, bad contacts, voltages and currents are not checked, and catalog data could itself be wrong.
-- Calibration is manual and assumes a roughly top-down photo of the whole board, with the four corner holes visible. Glare, blur, low resolution or a cropped board can fail the grid check.
-- Gemma 4 makes mistakes (a decoy object called an LED, misread resistor bands, run-to-run differences), which is why every proposal needs your confirmation and OpenCV snaps positions to the grid.
-- `MATCHES TEMPLATE` means the visible, confirmed connections match the template. It is not a safety statement.
+- Calibration is manual and needs a roughly top-down photo of the whole board with the four corner holes visible. Glare, blur, low resolution or a cropped board can fail the grid check.
+- Gemma 4 makes mistakes (a decoy object called an LED, misread resistor bands, run-to-run differences), which is why every proposal needs your confirmation.
+- `MATCHES TEMPLATE` means the visible, confirmed connections match the template. It is not a safety statement. Wirewise never controls hardware or sends commands to a board.
 
-## Demo images
+### Verification
 
-The bundled samples are **synthetic demo images**: computer-generated renders, **not real photos**, labelled as such in the UI, API and docs. Two exist: a seeded wrong-row mistake (ground jumper in row 16) and a corrected one (row 15), in `backend/data/fixtures/` (regenerate with `python backend/scripts/generate_fixtures.py`). If you add real photos as `fixtures/correct.jpg`, `fixtures/wrong_wire.jpg` or `fixtures/blurry.jpg`, the app lists them as extra samples.
+[docs/STATUS.md](docs/STATUS.md) states exactly what was run and what was not. In short: 85 backend tests pass; the frontend builds; real hosted Gemma 4 31B was run through the UI on both synthetic demo images (seeded image: `POSSIBLE MISMATCH` on the row-16 ground wire; corrected image: `MATCHES TEMPLATE` after the decoy LED is rejected). The local Ollama path is tested only with a mock.
 
-## Verification
+## Challenges and Learnings
 
-[docs/STATUS.md](docs/STATUS.md) states exactly what was run and what was not. In short: 85 backend tests pass; the frontend builds; real hosted Gemma 4 31B was run through the UI on both synthetic demo images (seeded image gives `POSSIBLE MISMATCH` on the row-16 ground wire; corrected image gives `MATCHES TEMPLATE` after the decoy LED is rejected).
-
-```bash
-cd backend && pip install -r requirements-dev.txt && pytest
-cd frontend && npm run build        # type-checks, then builds
-```
-
-## Open source and AI usage
-
-**AI models**
-
-| Component | Role | License / terms |
-| --- | --- | --- |
-| Gemma 4 (`gemma-4-31b-it`, `gemma-4-26b-a4b-it`) by Google DeepMind | Reads the breadboard image and proposes components, wires, colour bands and rough positions. Never decides pass/fail. | Apache-2.0 per Google's Gemma 4 release; check the model card for current terms |
-| Gemma 4 `gemma4:e4b` via [Ollama](https://ollama.com) | Optional local equivalent | Model: as above. Ollama: MIT |
-| Gemini API (Google) | Hosts Gemma 4 for the default demo configuration | Google API terms |
-
-**Libraries:** FastAPI (MIT), Uvicorn (BSD-3), Pydantic (MIT), NetworkX (BSD-3), OpenCV `opencv-python-headless` (Apache-2.0), NumPy (BSD-3), Pillow (HPND), httpx (BSD-3), python-multipart (Apache-2.0), `google-genai` (Apache-2.0), React (MIT), Vite and `@vitejs/plugin-react` (MIT), TypeScript (Apache-2.0), pytest (MIT), Fontsource packages for Bricolage Grotesque and Atkinson Hyperlegible Next (fonts under the SIL OFL). Licenses are stated from general knowledge of these projects; check each package for its current terms.
-
-**Development tooling:** this revision was developed with the assistance of Claude Code (Anthropic), which wrote and edited code and documentation under the team's direction.
-
-**Data:** the parts catalog (`backend/data/catalog/parts.json`) lists a source per part (for example the Arduino UNO R3 datasheet and the IEC 60062 colour code). No datasets are used. The synthetic demo images are generated by `backend/scripts/generate_fixtures.py`.
-
-## Challenges and learnings
-
-- **Hosted model reliability and latency.** `gemma-4-31b-it` took 56–62 s per image and was often overloaded (HTTP 500/503/504), which exceeded the 60 s default timeout. We raised the hosted timeout to 180 s, report overload clearly, and kept the "no automatic retry" rule.
+- **Hosted model reliability and latency.** `gemma-4-31b-it` took 56-62 s per image and was often overloaded (HTTP 500/503/504), exceeding the 60 s default timeout. We raised the hosted timeout to 180 s, report overload clearly, and kept the "no automatic retry" rule.
 - **Model errors are real.** Gemma 4 called a decoy object an LED and, in the 26B model, misread resistor bands; answers also varied between runs at temperature 0. This is the reason for the propose-confirm-compare design.
-- **A silent fallback is a lie.** The earlier `auto` mode fell back to scripted data when no key was set. Making the provider explicit, and failing loudly, was the most important behaviour change.
-- **Local inference is heavy.** The target machine had 15.7 GB RAM and no GPU, so a local Gemma 4 download alone was many hours; the local path is therefore documented but unverified with a real model.
+- **A silent fallback is a lie.** The earlier `auto` mode fell back to scripted data when no key was set. Making the provider explicit and failing loudly was the most important behaviour change.
+- **Local inference is heavy.** The development machine had 15.7 GB RAM and no GPU, so a local Gemma 4 download alone took many hours; the local path is documented but unverified with a real model.
 - **Inputs outside the supported hardware.** A set of ten sample circuit images (LED, buttons, sensors, 7-segment, transistor) was too small (307 px wide) and showed other circuits and breadboard layouts, so Wirewise rejects or cannot calibrate them. Refusing is the intended behaviour.
 
-## Credits and license
+## Devpost Submission
 
-Gemma 4 by Google DeepMind; Ollama; the open-source libraries listed above. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the architecture notes.
+**Devpost Project:** [Devpost Project URL]
 
-Licensed under Apache-2.0. See [LICENSE](LICENSE).
+[Add the link to the team's Devpost submission. Ensure the Devpost project page is complete and contains the required project information, links, media, and team details.]
+
+## Credits and License
+
+### Credits
+
+Gemma 4 by Google DeepMind; the Gemini API; Ollama; the open-source libraries listed under Open Source and AI Usage. Team: see the Team table above.
+
+### License
+
+Apache-2.0. See [LICENSE](LICENSE).
 
 Wirewise does not submit anything to MLH or OrganizerHQ; submit the repository yourself.
+
+## Submission Checklist
+
+- [ ] Project title and description added
+- [ ] All team members listed
+- [ ] Problem clearly explained
+- [ ] Reason for choosing the problem explained
+- [ ] Solution and key features documented
+- [ ] Innovation and differentiation explained
+- [ ] Architecture included
+- [ ] Technical implementation documented
+- [ ] Work completed during the hackathon documented
+- [ ] Team contributions documented
+- [ ] Working application is functional
+- [ ] Live application link added where applicable
+- [ ] Demo video added
+- [ ] AI and open-source components documented
+- [ ] Setup and usage instructions tested
+- [ ] Challenges and learnings documented
+- [ ] Devpost submission completed
+- [ ] Devpost link added
+- [ ] Credits added
+- [ ] License added
+- [ ] Repository is organized and complete
