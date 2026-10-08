@@ -2,9 +2,15 @@
 
 **Check your breadboard against the circuit you meant to build.**
 
-Wirewise compares a photo of a real low-voltage breadboard circuit with an intended circuit template. Gemma 4 looks at the photo and *proposes* what it sees. You confirm, reject or correct each proposal. A deterministic graph comparison then reports where the confirmed wiring differs from the template, with the evidence for every finding.
+Wirewise compares a photo of a real low-voltage breadboard circuit with an intended circuit template. A **local Gemma 4 model** looks at the photo and *proposes* what it sees. You confirm, reject or correct each proposal. A deterministic graph comparison then reports where the confirmed wiring differs from the template, with the evidence for every finding.
 
 It is an inspection and learning aid. It never powers, controls or talks to hardware, and it never says a circuit is safe to power.
+
+Built for the Hacktoberfest Hack Day (Open-Source AI Hack Day, MLH): main track plus the "Best Use of Gemma 4" challenge.
+
+- **Gemma 4 model:** `gemma4:e4b` (Gemma 4 E4B)
+- **Runtime:** [Ollama](https://ollama.com), running locally on your machine
+- **License:** Apache-2.0
 
 ## The problem
 
@@ -12,58 +18,85 @@ A wire one row off, a swapped LED, or the wrong resistor is easy to miss on a br
 
 ## What it does
 
-1. **Choose a circuit.** One verified template ships: an Arduino UNO R3 pin D9 driving a 5 mm red LED through a 220 Ω resistor, on a half-size 400-point breadboard. You see the schematic and the expected connection list.
+1. **Choose a circuit.** One verified template ships: an Arduino UNO R3 pin D9 driving a 5 mm red LED through a 220 Ω resistor, on a half-size 400-point breadboard. You see the schematic and the expected connection list before uploading anything.
 2. **Inspect your photo.** Upload a JPEG, PNG or WebP (type and size are validated). Drag four corner handles onto breadboard holes `a1`, `a30`, `j30`, `j1`. Wirewise computes a perspective correction, draws a hole grid over the photo and checks that the grid really lands on holes. If it does not, it asks you to adjust instead of guessing.
-3. **Review proposals.** Gemma 4 proposes parts and wire endpoints with a bounding polygon and a confidence label. Each proposal shows its origin (`gemma`, `opencv`, `user` or `demo`). Proposals are not facts until you confirm them. You can reject, correct hole or pin positions, or add something the model missed.
-4. **Review findings.** A graph is built only from confirmed observations. NetworkX compares it with the template. The report shows one of four states:
-   - `MATCHES TEMPLATE`
-   - `POSSIBLE MISMATCH`
-   - `NEEDS REVIEW`
-   - `NOT CHECKED`
-
-   Findings are grouped, each with the evidence used, the rule applied, a "Show on photo" jump to the region, and a "Show expected link" jump to the schematic. A twin-trace view puts the expected connection above what you confirmed, with the break marked.
+3. **Review proposals.** Gemma 4 proposes parts and wire endpoints with a bounding polygon and a confidence label. Each proposal shows its source (`gemma`, `opencv`, `user`) and the **model name and runtime** that produced it. Proposals are not facts until you confirm them. You can reject, correct hole or pin positions, or add something the model missed.
+4. **Review findings.** A graph is built only from confirmed observations. NetworkX compares it with the template. The report shows one of four states: `MATCHES TEMPLATE`, `POSSIBLE MISMATCH`, `NEEDS REVIEW`, `NOT CHECKED`. Findings are grouped, each with the evidence used, the rule applied, a "Show on photo" jump to the region, and a "Show expected link" jump to the schematic.
 
 Finding types: wrong row, wrong pin, polarity mismatch, missing connection, unexpected connection, resistor value mismatch (from colour bands you confirmed), ambiguous, and not checked.
 
-## Quick start (demo mode, no API key)
+## Setup
 
-Requirements: Python 3.11+ and Node.js 20+.
+Requirements: Python 3.11+, Node.js 20.19+ (or 22.12+), and [Ollama](https://ollama.com/download).
+
+### 1. Local Gemma 4 runtime (Ollama)
 
 ```bash
-# 1. Backend
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --port 8000
+# Install Ollama from https://ollama.com/download, start it, then:
+ollama pull gemma4:e4b        # about 9.6 GB download; E4B needs roughly 10 GB of free RAM
+```
 
-# 2. Frontend (second terminal)
+The tag `gemma4:e4b` was checked against the [Ollama library page](https://ollama.com/library/gemma4) on 2026-10-08 (other tags there: `e2b`, `12b`, `26b`, `31b`). The 26B and 31B variants need far more memory; pick a tag your machine can hold and set `OLLAMA_MODEL` accordingly. On a machine without a GPU, the first analysis loads the model and can be slow, so raise `GEMMA_TIMEOUT_SECONDS` if it times out.
+
+### 2. Backend
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate           # Windows;  macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+cp ../.env.example ../.env        # optional: defaults already point at local Ollama
+uvicorn app.main:app --port 8000
+```
+
+### 3. Frontend
+
+```bash
 cd frontend
 npm install
-npm run build && npm start        # or: npm run dev
+npm run dev                       # http://localhost:5173, proxies /api to the backend
 ```
 
-Open http://localhost:3000. A banner makes demo mode obvious. With no `GEMINI_API_KEY` the app uses the demo provider, which replays recorded proposals for the two bundled demo photos and refuses any other photo.
+For a production build: `npm run build && npm run preview`. The browser only talks to the Vite server; `/api` is proxied to `BACKEND_URL` (default `http://127.0.0.1:8000`), so no key and no backend address are in browser code.
 
-The browser only talks to the Next.js server. `next.config.ts` proxies `/api/*` to `BACKEND_URL` (default `http://127.0.0.1:8000`), so no key and no backend address are in browser code.
+### Checking that Gemma is ready
 
-## Using Gemma 4
+The header of the app shows the active provider, the model name, and whether Ollama is reachable and the model is installed and loaded. The same information is at `GET /api/health`.
 
-```bash
-cp .env.example .env      # then set GEMINI_API_KEY
-```
+If Ollama is not running, the model is not installed, or a request times out, **the app shows an error with setup instructions and does not analyze anything**. It never switches to another provider or to demo data on its own.
 
-With a key set, Wirewise offers Gemma 4 as the photo provider. The backend uses:
+## Providers
 
-- **Integration:** the Gemini API through the `google-genai` Python SDK (server side only).
-- **Model:** `gemma-4-31b-it` by default; `gemma-4-26b-a4b-it` is also allowed through `GEMMA_MODEL`.
-- **Image input:** the Files API (`client.files.upload`), with the image placed before the text prompt, deleted again right after the call. `GEMMA_IMAGE_INPUT=inline` sends bytes in the request instead.
-- **Output:** a fenced JSON block with `box_2d` boxes on a 0–1000 grid (`[ymin, xmin, ymax, xmax]`), parsed and validated with Pydantic. JSON mode is not relied on.
+`VISION_PROVIDER` selects exactly one provider. There is no `auto` mode (it was removed because it silently fell back to demo data).
 
-The integration was written against the Gemma on Gemini API and Gemma vision docs on 2026-10-08. **The Gemma path has been tested with a fake client in the test suite, not against the live API**, so check the model ID and image-input method against the current docs if a call fails.
+| Value | What it is |
+| --- | --- |
+| `ollama` (default) | Local Gemma 4 through Ollama. |
+| `gemini` | Optional alternative: hosted Gemma 4 (`gemma-4-31b-it` or `gemma-4-26b-a4b-it`) through the Gemini API with `GEMINI_API_KEY`. The photo leaves your machine. |
+| `demo` | **Tests only.** Scripted answers for the bundled *synthetic* test photos. No model runs. When active, the UI shows a persistent "DEMO MODE: no model is analyzing this image" banner and every observation is labelled demo data. It can only be enabled by setting `VISION_PROVIDER=demo`. |
 
-### How Gemma 4 contributes
+Each analysis sends one image with a configurable timeout (`GEMMA_TIMEOUT_SECONDS`, default 60 s) and is never retried automatically.
 
-Gemma 4 does the part that needs vision: finding resistors, LEDs, jumper wires and the Arduino in the rectified photo, reading resistor colour bands, and describing which hole or header pin each wire end or lead appears to use. It does not make the pass/fail call, never supplies ratings or pinouts, and its output is treated as untrusted. Positions are snapped to the nearest calibrated hole by OpenCV; text visible in the image is never obeyed.
+## How Gemma 4 contributes
+
+Gemma 4 does the part that needs vision. For the photo you give it, it:
+
+- identifies component types: resistors, LEDs, jumper wires and the Arduino,
+- reads printed labels and resistor colour bands,
+- reports polarity cues (LED lead length, flat rim) where visible,
+- gives coarse locations of wire ends and lead entry points,
+- flags regions that are hidden or too blurry to inspect.
+
+What Gemma 4 does **not** do:
+
+- It never makes the pass/fail decision. The comparison is deterministic NetworkX graph logic over confirmed observations, the template and the verified catalog.
+- It does not supply pixel-exact positions. OpenCV snaps its coarse coordinates to the calibrated hole grid, and you confirm or correct every proposal.
+- It does not supply ratings or pinouts. Those come only from `backend/data/catalog/parts.json`, with a source per part.
+- Its output is untrusted: it is validated, length-limited, and text visible in the image is never obeyed.
+
+Every proposal records and displays the model name and runtime that produced it.
+
+A saved real response from the local model is in [`docs/gemma_sample_response.json`](docs/gemma_sample_response.json) *(see "Status of the real-photo run" below)*.
 
 ## Supported hardware
 
@@ -74,69 +107,52 @@ Gemma 4 does the part that needs vision: finding resistors, LEDs, jumper wires a
 | Breadboard | Half-size 400-point, 30 rows, columns a–e and f–j, centre channel isolates |
 | Parts | 220 Ω resistor (red-red-brown), 5 mm red LED, jumper wire |
 
-Catalog facts (pinouts, polarity cues, colour code) come from `backend/data/catalog/parts.json` with a source listed per part. Wirewise stores no voltage or current limits and never takes them from model memory.
+Reference layout in the template: wire D9 → `a10`, R1 `c10` to `c14`, LED anode `d14` and cathode `d15`, wire `a15` → GND. Wirewise compares nets, not exact rows, so any electrically equivalent layout passes.
+
+Only low-voltage, allowlisted circuits are supported. Mains voltage, household wiring, high-energy batteries and high-current motor circuits are out of scope, and other circuits are reported as unsupported.
 
 ## Limitations
 
-- One circuit, one breadboard model. Other photos can be analysed only if they match this hardware.
+- One circuit, one breadboard model.
 - Power rails are not modelled; anything depending on them is `NOT CHECKED`.
-- It only sees what is visible and confirmed. Hidden or out-of-frame wiring, damaged parts, bad contacts, voltages and currents are not checked.
+- Wirewise only sees what is visible and confirmed. Hidden or out-of-frame wiring, damaged parts, bad contacts, voltages and currents are not checked, and catalog data could itself be wrong.
 - Calibration is manual and assumes a roughly top-down photo of the whole board. Heavy glare, blur or a tilted board can fail the grid check.
-- The two demo photos are **synthetic renders**, not photographs of real hardware. The demo provider only works on them.
-- `MATCHES TEMPLATE` means the confirmed connections match the template. It is not a safety statement.
+- A small local model is imprecise: expect missed items and wrong hole positions, which is why every proposal needs your confirmation and OpenCV snaps positions.
+- Photo guidance: whole breadboard in frame, mostly top-down, good light, no covered wires or labels.
+- `MATCHES TEMPLATE` means the visible, confirmed connections match the template. It is not a safety statement.
 
-## Demo script (about two minutes)
+## Photos and fixtures
 
-1. Open the app. Point out the demo banner and the first step: the schematic and expected connections.
-2. Choose **Seeded mismatch: ground jumper in row 16**.
-3. On the calibration screen, show the four pre-placed handles on `a1`, `a30`, `j30`, `j1`.
-4. Click **Check the grid**: 99% of holes matched. Switch to **Corrected view** to show rows and columns lining up.
-5. Click **Find parts and wires**. Proposals appear as dashed overlays with confidence labels and origins.
-6. Confirm the resistor, LED and both wires. **Reject** the stray orange object (a capacitor decoy not in the template).
-7. Click **Check against the template**: `POSSIBLE MISMATCH`, wrong row.
-8. Click **Show on photo** (red region) and **Show expected link** (schematic). Read the twin trace: LED cathode in row 15, GND wire in row 16.
-9. Click **Correct this connection**, change the wire end to `a15`, save.
-10. The result becomes `MATCHES TEMPLATE`, still with the "not a safety statement" note. Optionally click **Save project**.
+- **Real photos** (for the demo and manual testing) go in the repo-root [`fixtures/`](fixtures) folder as `correct.jpg`, `wrong_wire.jpg` and `blurry.jpg`. When present, the app offers them as sample photos on the first screen. They go through the same calibration and Gemma 4 analysis as an uploaded photo.
+- **Synthetic test fixtures** live in `backend/data/fixtures/` and are computer-generated renders used only by the automated tests and `VISION_PROVIDER=demo`. They are labelled `SYNTHETIC TEST FIXTURE` wherever they appear. Regenerate them with `python backend/scripts/generate_fixtures.py`.
 
-## Manual acceptance checklist
+## Status of the real-photo run
 
-- [ ] The main flow works in demo mode with no API credentials.
-- [ ] The demo banner is visible on every step in demo mode.
-- [ ] The app never says a circuit is "safe to power" (search the UI and report for "safe").
-- [ ] Uploading a PDF, an oversized file or a non-image is rejected with a clear message.
-- [ ] A photo that cannot be calibrated asks for corner adjustment instead of continuing.
-- [ ] Rejecting a proposal removes it from the comparison.
-- [ ] Unreviewed proposals never produce a `MATCHES TEMPLATE` result.
-- [ ] Every finding lists evidence and the rule used, and jumps to a photo region where one exists.
-- [ ] Handles are movable by keyboard (arrow keys, Shift for 10 px); state is never colour-only.
-- [ ] The layout is usable at 390 px width with no horizontal scroll.
-- [ ] The frontend contains no API key; `GEMINI_API_KEY` appears only in help text naming the server variable.
-- [ ] A photo is not on disk unless **Save project** was clicked.
+See [docs/STATUS.md](docs/STATUS.md) for what was verified against a real local Gemma 4 model and what was not.
 
 ## Tests
 
 ```bash
-cd backend && pip install -r requirements-dev.txt && pytest      # 60 tests
-cd frontend && npm run typecheck && npm run build
+cd backend && pip install -r requirements-dev.txt && pytest
+cd frontend && npm run build        # type-checks, then builds
 ```
 
-The suite covers: proposals and rejected observations never create edges; the report never contains "safe"; provenance on every node and edge; text injected into a proposal staying inert; the API key never appearing in responses or errors; the Files API upload being deleted after use; the demo provider refusing unknown photos; calibration failure modes; upload validation including EXIF stripping.
+The suite covers: proposals and rejected observations never create edges; the report never contains "safe"; provenance on every node and edge; text injected into a proposal staying inert; no API key in responses or errors; **no silent fallback** (an unreachable, missing or timed-out Gemma returns an error and never demo data); `/api/health`; upload validation including EXIF stripping; calibration failure modes; and the local provider through a mocked Ollama server (the real model is not run by the test suite).
 
 ## Dependencies
 
-Backend (`backend/requirements.txt`): FastAPI, Uvicorn, Pydantic, NetworkX, `google-genai`, `opencv-python-headless`, NumPy, Pillow, python-multipart. Dev: pytest and httpx.
-Frontend (`frontend/package.json`): Next.js 16 (App Router), React 19, TypeScript, and the self-hosted fonts Bricolage Grotesque and Atkinson Hyperlegible Next via Fontsource.
-Storage: SQLite (standard library) for templates and explicitly saved projects.
+- Backend (`backend/requirements.txt`): FastAPI, Uvicorn, Pydantic, NetworkX, httpx, `opencv-python-headless`, NumPy, Pillow, python-multipart, and `google-genai` (only used for `VISION_PROVIDER=gemini`). Dev: pytest.
+- Frontend (`frontend/package.json`): React 19, TypeScript, Vite, `@vitejs/plugin-react`, and the self-hosted fonts Bricolage Grotesque and Atkinson Hyperlegible Next via Fontsource.
+- Runtime: Ollama and the `gemma4:e4b` model.
+- Storage: SQLite (standard library) for templates and explicitly saved projects.
 
-## Regenerating the demo fixtures
+## Demo
 
-```bash
-cd backend && python scripts/generate_fixtures.py
-```
+A two-minute walkthrough is in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
 
 ## Hackathon notes
 
-Built for the Hacktoberfest Hack Day main track and the optional Gemma 4 challenge. Wirewise does not submit anything to MLH or OrganizerHQ; submit the repository yourself.
+Wirewise does not submit anything to MLH or OrganizerHQ; submit the repository yourself.
 
 ## License
 
