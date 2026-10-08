@@ -500,13 +500,17 @@ During the Hack Day, the team implemented the core end-to-end Wirewise workflow:
 
 #  Working Application
 
-**Live Application:** `(https://nuts-steady-gate-frequency.trycloudflare.com/)`
+**Live Application:** `https://nuts-steady-gate-frequency.trycloudflare.com`
 
 ---
 
 #  Demo Video
 
-**Demo Video:** `Uploading Wirewise - Brave 2026-10-08 15-57-51.mp4…`
+**Demo Video:** 
+
+https://github.com/user-attachments/assets/48cad151-15e3-4738-905f-4b072aa2a272
+
+
 
 ---
 #  Open Source & AI Usage
