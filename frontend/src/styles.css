@@ -126,7 +126,9 @@ a { color: var(--action); }
 
 /* ---------- photo workspace ---------- */
 .frame { background: #101a1d; border-radius: var(--r-frame); border: 2px solid var(--ink); overflow: hidden; position: relative; }
-.frame svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; }
+.frame svg { display: block; width: 100%; height: auto; touch-action: pan-y pinch-zoom; user-select: none; }
+/* only the calibration view has drag handles: there the photo must not scroll the page under the finger */
+.frame[data-mode="calibrate"] svg { touch-action: none; }
 .frame-tabs { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; flex-wrap: wrap; align-items: center; }
 .tab { border: 1.5px solid var(--line-strong); background: var(--panel); border-radius: 999px; padding: 0.2rem 0.85rem; font-weight: 600; cursor: pointer; min-height: 36px; }
 .tab[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -260,3 +262,11 @@ dialog::backdrop { background: rgba(21, 38, 43, 0.55); }
 .model-status-sub { display: block; color: var(--ink-2); font-size: 0.82rem; }
 .unavailable { border: 1.5px solid var(--bad-line); border-left-width: 6px; background: var(--bad-bg); border-radius: var(--r-control); padding: 0.8rem 0.95rem; display: grid; gap: 0.5rem; }
 .unavailable pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 0.5rem 0.65rem; overflow-x: auto; font-size: 0.88rem; white-space: pre-wrap; }
+
+/* ---------- touch devices: 44 px targets, no keyboard hints ---------- */
+@media (pointer: coarse) {
+  .btn-small, .tab, .obs-name { min-height: 44px; }
+  .model-status .btn { min-width: 44px; min-height: 44px; }
+  .btn-small { padding-left: 0.9rem; padding-right: 0.9rem; }
+  .kbd-hint { display: none; }
+}

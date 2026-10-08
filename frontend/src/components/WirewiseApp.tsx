@@ -469,7 +469,7 @@ export default function WirewiseApp() {
                 </div>
                 {!analyzed && (
                   <p className="small muted" style={{ marginBottom: 10 }}>
-                    Drag each handle onto the matching corner hole: <span className="hole">a1</span>, <span className="hole">a30</span>, <span className="hole">j30</span>, <span className="hole">j1</span>. Row numbers run along the long side of the board, column letters across it. Arrow keys nudge a handle by 1 px, Shift by 10.
+                    Drag each handle onto the matching corner hole: <span className="hole">a1</span>, <span className="hole">a30</span>, <span className="hole">j30</span>, <span className="hole">j1</span>. Row numbers run along the long side of the board, column letters across it. <span className="kbd-hint">Arrow keys nudge a handle by 1 px, Shift by 10.</span>
                   </p>
                 )}
                 <PhotoCanvas

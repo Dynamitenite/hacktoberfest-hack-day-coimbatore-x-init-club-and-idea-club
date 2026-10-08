@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Calibration, Finding, Observation, Point, ResultState } from "@/lib/types";
 
 export type CanvasMode = "calibrate" | "observe" | "findings";
@@ -63,7 +63,20 @@ export default function PhotoCanvas(p: Props) {
   const [view, setView] = useState<"photo" | "corrected">("photo");
   const W = p.width;
   const H = p.height;
-  const handleR = Math.max(13, W / 85);
+  // Size handles in screen pixels, not image pixels: a 1280 px photo shown 350 px wide on a phone would
+  // otherwise get ~8 px handles. `u` = SVG units per CSS pixel.
+  const [u, setU] = useState(1);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const update = () => setU(svg.clientWidth > 0 ? W / svg.clientWidth : 1);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(svg);
+    return () => ro.disconnect();
+  }, [W, p.mode, view]);
+  const handleR = 12 * u; // 24 px visible circle
+  const handleHit = 26 * u; // 52 px invisible touch target
   const font = Math.max(12, W / 62);
   const grid = p.calibration?.grid ?? [];
   const gridMap = useMemo(() => new Map(grid.map((g) => [g.hole, g])), [grid]);
@@ -124,7 +137,7 @@ export default function PhotoCanvas(p: Props) {
   return (
     <div>
       {canCorrect ? <ViewTabs view={view} setView={setView} canCorrect /> : null}
-      <div className="frame">
+      <div className="frame" data-mode={p.mode}>
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
@@ -178,11 +191,12 @@ export default function PhotoCanvas(p: Props) {
                       }
                     }}
                   >
-                    <circle cx={pt.x} cy={pt.y} r={handleR + 4} fill="#fff" opacity={0.95} />
-                    <circle cx={pt.x} cy={pt.y} r={handleR} fill="rgba(36,70,200,0.25)" stroke="var(--action)" strokeWidth={4} />
-                    <line x1={pt.x - handleR - 8} x2={pt.x + handleR + 8} y1={pt.y} y2={pt.y} stroke="var(--action)" strokeWidth={2} />
-                    <line y1={pt.y - handleR - 8} y2={pt.y + handleR + 8} x1={pt.x} x2={pt.x} stroke="var(--action)" strokeWidth={2} />
-                    <text x={pt.x + handleR + 8} y={pt.y - handleR - 4} fontSize={font * 1.15} fontWeight={800} fill="#fff" stroke="var(--action)" strokeWidth={5} paintOrder="stroke">
+                    <circle cx={pt.x} cy={pt.y} r={handleHit} fill="transparent" />
+                    <circle cx={pt.x} cy={pt.y} r={handleR + 2 * u} fill="#fff" opacity={0.95} />
+                    <circle cx={pt.x} cy={pt.y} r={handleR} fill="rgba(36,70,200,0.25)" stroke="var(--action)" strokeWidth={3 * u} />
+                    <line x1={pt.x - handleR - 5 * u} x2={pt.x + handleR + 5 * u} y1={pt.y} y2={pt.y} stroke="var(--action)" strokeWidth={1.5 * u} />
+                    <line y1={pt.y - handleR - 5 * u} y2={pt.y + handleR + 5 * u} x1={pt.x} x2={pt.x} stroke="var(--action)" strokeWidth={1.5 * u} />
+                    <text x={pt.x + handleR + 5 * u} y={pt.y - handleR - 2 * u} fontSize={14 * u} fontWeight={800} fill="#fff" stroke="var(--action)" strokeWidth={4 * u} paintOrder="stroke">
                       {k}
                     </text>
                   </g>
