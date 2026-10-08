@@ -1,0 +1,63 @@
+{
+  "id": "uno_d9_led_220r",
+  "name": "UNO R3 → 220 Ω → red LED on D9",
+  "summary": "A single red LED driven from Arduino UNO R3 digital pin 9 through a 220 Ω series resistor, returned to GND. Built on a half-size 400-point breadboard.",
+  "supported_board_id": "arduino_uno_r3",
+  "breadboard_model_id": "half_400",
+  "component_ids": ["arduino_uno_r3", "resistor_220r", "led_5mm_red", "jumper_wire"],
+  "voltage_class": "Low voltage: board powered from USB (5 V). Mains, batteries above the board's documented input range, and motor circuits are out of scope.",
+  "instances": [
+    {"ref": "BOARD", "part_id": "arduino_uno_r3", "label": "Arduino UNO R3"},
+    {"ref": "R1", "part_id": "resistor_220r", "label": "R1 · 220 Ω"},
+    {"ref": "LED1", "part_id": "led_5mm_red", "label": "LED1 · red 5 mm"}
+  ],
+  "expected_nodes": [
+    {"id": "BOARD.D9", "instance": "BOARD", "terminal": "D9", "label": "Arduino D9"},
+    {"id": "BOARD.GND", "instance": "BOARD", "terminal": "GND", "label": "Arduino GND"},
+    {"id": "R1.1", "instance": "R1", "terminal": "1", "label": "R1 lead 1"},
+    {"id": "R1.2", "instance": "R1", "terminal": "2", "label": "R1 lead 2"},
+    {"id": "LED1.anode", "instance": "LED1", "terminal": "anode", "label": "LED1 anode (+)"},
+    {"id": "LED1.cathode", "instance": "LED1", "terminal": "cathode", "label": "LED1 cathode (−)"}
+  ],
+  "expected_edges": [
+    {"id": "e_sig", "a": "BOARD.D9", "b": "R1.1", "rule_id": "rule_sig", "label": "D9 → R1"},
+    {"id": "e_led", "a": "R1.2", "b": "LED1.anode", "rule_id": "rule_led", "label": "R1 → LED1 anode"},
+    {"id": "e_gnd", "a": "LED1.cathode", "b": "BOARD.GND", "rule_id": "rule_gnd", "label": "LED1 cathode → GND"}
+  ],
+  "explicit_rules": [
+    {"id": "rule_sig", "type": "connection", "text": "Arduino D9 must be connected to one lead of R1."},
+    {"id": "rule_led", "type": "connection", "text": "The other lead of R1 must be connected to the LED1 anode."},
+    {"id": "rule_gnd", "type": "connection", "text": "The LED1 cathode must be connected to an Arduino GND pin."},
+    {"id": "rule_r_value", "type": "component_value", "instance": "R1", "expected": {"value": 220, "unit": "ohm"}, "text": "R1 must be the catalog 220 Ω resistor (red-red-brown)."},
+    {"id": "rule_led_polarity", "type": "polarity", "instance": "LED1", "text": "LED1 anode faces R1 and its cathode faces GND."},
+    {"id": "rule_no_extra", "type": "no_unexpected_connections", "text": "No other connections may join two template terminals that belong to different nets."}
+  ],
+  "reference_layout": {
+    "description": "One valid way to build this template. Any row works electrically; Wirewise compares nets, not exact rows.",
+    "placements": [
+      {"ref": "W1", "kind": "wire", "from": {"board_pin": "D9"}, "to": {"hole": "a10"}},
+      {"ref": "R1", "kind": "component", "terminals": {"1": "c10", "2": "c14"}},
+      {"ref": "LED1", "kind": "component", "terminals": {"anode": "d14", "cathode": "d15"}},
+      {"ref": "W2", "kind": "wire", "from": {"hole": "a15"}, "to": {"board_pin": "GND"}}
+    ]
+  },
+  "reference_diagram": {
+    "viewBox": "0 0 600 300",
+    "symbols": [
+      {"id": "BOARD", "type": "board", "x": 20, "y": 40, "w": 150, "h": 220, "label": "Arduino UNO R3",
+       "pins": [
+         {"terminal": "BOARD.D9", "label": "D9 (~9)", "x": 170, "y": 90},
+         {"terminal": "BOARD.GND", "label": "GND", "x": 170, "y": 230}
+       ]},
+      {"id": "R1", "type": "resistor", "x1": 250, "y1": 90, "x2": 350, "y2": 90, "label": "R1 · 220 Ω",
+       "terminals": {"R1.1": [250, 90], "R1.2": [350, 90]}},
+      {"id": "LED1", "type": "led", "x1": 470, "y1": 125, "x2": 470, "y2": 195, "label": "LED1",
+       "terminals": {"LED1.anode": [470, 125], "LED1.cathode": [470, 195]}}
+    ],
+    "wires": [
+      {"edge_id": "e_sig", "points": [[170, 90], [250, 90]]},
+      {"edge_id": "e_led", "points": [[350, 90], [470, 90], [470, 125]]},
+      {"edge_id": "e_gnd", "points": [[470, 195], [470, 230], [170, 230]]}
+    ]
+  }
+}

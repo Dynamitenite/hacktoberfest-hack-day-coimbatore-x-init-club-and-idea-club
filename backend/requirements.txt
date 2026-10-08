@@ -1,0 +1,10 @@
+# Versions verified against PyPI on 2026-10-08.
+fastapi==0.142.4
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+networkx>=3.4
+google-genai==2.29.0
+opencv-python-headless==5.0.0.93
+numpy>=2.0
+pillow>=11.0
+python-multipart>=0.0.20
