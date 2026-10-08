@@ -54,13 +54,20 @@ Wirewise guides users through a structured, human-in-the-loop inspection process
 5. **Evidence-Based Reporting**  
    Wirewise overlays findings—such as missing wires, misplaced rows, or polarity errors—directly onto the original photo with clear explanations and pinpointed image regions.
 
+
 ### Key Features
 
-- [Feature 1]
-- [Feature 2]
-- [Feature 3]
-- [Feature 4]
+* **Interactive Perspective & Grid Calibration**  
+  Uses OpenCV 4-point landmark alignment to correct lens distortion and map physical breadboard coordinates directly onto top-down circuit photos.
 
+* **Gemma 4 AI Vision Proposals**  
+  Leverages Gemma 4 multimodal vision to identify component types, pin markings, wire endpoints, and polarity orientation with confidence scores and bounding polygons.
+
+* **Human-in-the-Loop Verification System**  
+  Provides an interactive review interface that requires explicit user confirmation or correction before turning visual detections into electrical connections.
+
+* **Deterministic Graph Engine & Evidence Overlay**  
+  Compiles verified connections into NetworkX graphs to evaluate expected vs. observed wiring, overlaying color-coded findings directly onto photo regions with plain-language explanations.
 ## Innovation and Differentiation
 
 [Explain what is innovative about the approach and how it differs from existing or conventional solutions.]
