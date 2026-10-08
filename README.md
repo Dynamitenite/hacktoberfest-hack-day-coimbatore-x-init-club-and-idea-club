@@ -9,10 +9,10 @@
 
 | Member | Contribution   |
 | ------ | -------------- |
-| [Name] | [Contribution] |
-| [Name] | [Contribution] |
-| [Name] | [Contribution] |
-| [Name] | [Contribution] |
+| Aakaash Pavangat | [Contribution] |
+| Tanala Phanendra | [Contribution] |
+| Mohammad Liyakat Ali | [Contribution] |
+| Govind Shrundan Reddy | [Contribution] |
 
 
 ## Problem Statement
