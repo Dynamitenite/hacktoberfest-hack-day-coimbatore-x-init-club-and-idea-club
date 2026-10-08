@@ -70,7 +70,21 @@ Wirewise guides users through a structured, human-in-the-loop inspection process
   Compiles verified connections into NetworkX graphs to evaluate expected vs. observed wiring, overlaying color-coded findings directly onto photo regions with plain-language explanations.
 ## Innovation and Differentiation
 
-[Explain what is innovative about the approach and how it differs from existing or conventional solutions.]
+Wirewise introduces a novel approach to physical hardware inspection by bridging computer vision, open-weight multimodal AI, and deterministic graph theory. Unlike conventional hardware debugging tools or pure AI vision demonstrations, Wirewise differs key ways:
+
+### 1. Hybrid Perception-Logic Architecture
+Traditional AI applications often try to perform both visual recognition and safety reasoning inside a single large language model—a method prone to dangerous hallucinations and unverified electrical claims. Wirewise strictly separates these concerns:
+* **Gemma 4** handles **visual perception** (proposing candidate components, labels, and wire endpoints).
+* **NetworkX** handles **electrical reasoning** (deterministically evaluating the graph topology against verified catalog rules).
+
+### 2. Geometric & Spatial Breadboard Grounding
+Standard computer vision models output loose bounding boxes that fail to capture spatial precision on dense breadboard grids. Wirewise combines OpenCV 4-point perspective warp matrices with Gemma 4's visual observations, mapping 2D pixel coordinates directly onto physical breadboard row-and-column locations (e.g., mapping a wire tip directly to `Row 12, Rail VCC`).
+
+### 3. Human-in-the-Loop Verification Safeguard
+Existing automated inspection systems either require expensive industrial hardware or operate as black boxes with no human intervention. Wirewise enforces a strict human-in-the-loop workflow: model proposals remain unconfirmed candidates until explicitly validated or corrected by the user, ensuring an uncertain AI guess is never silently converted into an electrical fact.
+
+### 4. Evidence-Based "Visual Linter" for Hardware
+Software developers rely on continuous integration tools and visual diffs to catch bugs early, but physical breadboard prototyping has lacked an equivalent visual tool. Wirewise acts as a visual linter for physical electronics, highlighting exact discrepancy regions directly on top of the original photo with clear, actionable explanations linked to template rules.
 
 ## Technical Implementation
 
