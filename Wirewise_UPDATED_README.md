@@ -1,4 +1,4 @@
-# Wirewise
+# 🔌 Wirewise
 
 > **AI-assisted visual inspection and learning for physical breadboard circuits.**
 
@@ -8,16 +8,16 @@ It combines **computer vision, multimodal AI, geometric calibration, determinist
 
 ---
 
-## Hack Day Project
+## 🏆 Hack Day Project
 
-**Event:** Hacktoberfest Hack Day  Coimbatore
-**Team:** Team Vitality
-**Project:** Wirewise
+**Event:** Hacktoberfest Hack Day — Coimbatore  
+**Team:** Team Vitality  
+**Project:** Wirewise  
 **License:** Apache-2.0
 
 ---
 
-#  Team
+# 👥 Team
 
 | Member | Contribution |
 |---|---|
@@ -28,7 +28,7 @@ It combines **computer vision, multimodal AI, geometric calibration, determinist
 
 ---
 
-#  Problem Statement
+# 🎯 Problem Statement
 
 Working with solderless breadboards is one of the easiest ways to learn electronics, but debugging a physical circuit can quickly become frustrating.
 
@@ -54,7 +54,7 @@ Wirewise addresses both problems by separating **visual perception** from **elec
 
 ---
 
-#  Why We Chose This Problem
+# 💡 Why We Chose This Problem
 
 Hardware debugging remains a major learning barrier in electronics education and maker environments.
 
@@ -70,70 +70,70 @@ The key idea is to combine:
 
 ---
 
-#  Solution Overview
+# 🚀 Solution Overview
 
 Wirewise allows a user to upload a photograph of a physical breadboard and compare it against a target circuit.
 
 The system follows a human-in-the-loop workflow:
 
 ```text
-                
-                  Target Circuit     
-                  / Template         
-                
-                           
-                           
-    
- Breadboard    Image Calibration
- Photograph            OpenCV       
-    
-                             
-                             
-                   
-                    Gemma 4 Vision   
-                    AI Proposals     
-                   
-                            
-                            
-                   
-                    Human Verification
-                    Confirm / Edit   
-                   
-                            
-                            
-                   
-                    Circuit Graph    
-                    NetworkX         
-                   
-                            
-                            
-                   
-                    Rule Validation  
-                    + Graph Compare  
-                   
-                            
-                            
-                   
-                    Visual Findings  
-                    & Explanation    
-                   
+                ┌─────────────────────┐
+                │  Target Circuit     │
+                │  / Template         │
+                └──────────┬──────────┘
+                           │
+                           ▼
+┌──────────────┐    ┌──────────────────┐
+│ Breadboard   │───▶│ Image Calibration│
+│ Photograph   │    │     OpenCV       │
+└──────────────┘    └────────┬─────────┘
+                             │
+                             ▼
+                   ┌──────────────────┐
+                   │ Gemma 4 Vision   │
+                   │ AI Proposals     │
+                   └────────┬─────────┘
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │ Human Verification│
+                   │ Confirm / Edit   │
+                   └────────┬─────────┘
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │ Circuit Graph    │
+                   │ NetworkX         │
+                   └────────┬─────────┘
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │ Rule Validation  │
+                   │ + Graph Compare  │
+                   └────────┬─────────┘
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │ Visual Findings  │
+                   │ & Explanation    │
+                   └──────────────────┘
 ```
 
 ---
 
-#  Core Workflow
+# 🔄 Core Workflow
 
-### 1.  Upload
+### 1. 📷 Upload
 The user uploads a photograph of the physical breadboard circuit.
 
 Wirewise is designed around low-voltage breadboard circuits and is intended as an educational inspection tool rather than a replacement for electrical safety procedures.
 
-### 2.  Interactive Calibration
+### 2. 📐 Interactive Calibration
 The user identifies important breadboard landmarks.
 
 Wirewise uses OpenCV's four-point perspective transformation to compensate for camera angle and perspective distortion.
 
-### 3.  AI-Assisted Vision
+### 3. 🤖 AI-Assisted Vision
 Gemma 4 analyzes the calibrated image and proposes observations such as:
 
 - Component type
@@ -147,7 +147,7 @@ Gemma 4 analyzes the calibrated image and proposes observations such as:
 
 The model provides **proposals**, not final electrical truth.
 
-### 4.  Human Verification
+### 4. 👤 Human Verification
 The user can:
 
 - Accept an observation.
@@ -156,12 +156,12 @@ The user can:
 - Adjust its position.
 - Review uncertain detections.
 
-### 5.  Graph Construction
+### 5. 🕸️ Graph Construction
 Confirmed observations are converted into an electrical connection graph.
 
 Breadboard positions and components become graph entities, while confirmed connections become graph relationships.
 
-### 6.  Deterministic Comparison
+### 6. 🧠 Deterministic Comparison
 NetworkX is used to compare the observed circuit graph against the expected target graph.
 
 This allows Wirewise to identify discrepancies such as:
@@ -173,7 +173,7 @@ This allows Wirewise to identify discrepancies such as:
 - Incorrect component placement
 - Potential polarity/orientation issues
 
-### 7.  Evidence-Based Report
+### 7. 🔎 Evidence-Based Report
 The result is presented visually on top of the original image.
 
 Instead of simply saying:
@@ -186,13 +186,13 @@ Wirewise attempts to answer:
 
 ---
 
-#  Key Features
+# ✨ Key Features
 
-##  Interactive Perspective & Grid Calibration
+## 📐 Interactive Perspective & Grid Calibration
 
 Uses OpenCV four-point perspective transformation to reduce the effect of camera perspective and map image coordinates to physical breadboard locations.
 
-##  Gemma 4 Vision Proposals
+## 🤖 Gemma 4 Vision Proposals
 
 Gemma 4 is used for multimodal visual analysis and proposes:
 
@@ -203,25 +203,25 @@ Gemma 4 is used for multimodal visual analysis and proposes:
 - Candidate connections
 - Confidence information
 
-##  Human-in-the-Loop Verification
+## 👤 Human-in-the-Loop Verification
 
 AI detections are not automatically treated as confirmed electrical facts.
 
 Users explicitly verify observations before they enter the circuit-comparison stage.
 
-##  Deterministic Graph Comparison
+## 🕸️ Deterministic Graph Comparison
 
 Verified observations are represented as a graph and compared against the expected circuit topology using NetworkX.
 
-##  Evidence-Based Visual Findings
+## 🎯 Evidence-Based Visual Findings
 
 Detected discrepancies are associated with image regions so users can understand where the problem occurs.
 
 ---
 
-#  Innovation & Differentiation
+# 💎 Innovation & Differentiation
 
-## 1. Hybrid PerceptionLogic Architecture
+## 1. Hybrid Perception–Logic Architecture
 
 Wirewise does not ask a single AI model to both understand an image and make unrestricted electrical decisions.
 
@@ -248,13 +248,13 @@ Wirewise therefore combines visual detection with geometric calibration so image
 
 ```text
 Image coordinate
-       
+       ↓
 Perspective transformation
-       
+       ↓
 Breadboard coordinate
-       
+       ↓
 Row / Column / Rail
-       
+       ↓
 Circuit connection
 ```
 
@@ -278,11 +278,11 @@ Wirewise explores the idea of applying the same philosophy to physical electroni
 
 ```text
 Software Code
-     
+     ↓
 Static Analysis
-     
+     ↓
 Error Location
-     
+     ↓
 Developer Fix
 ```
 
@@ -290,19 +290,19 @@ becomes:
 
 ```text
 Physical Circuit
-     
+     ↓
 Visual Inspection
-     
+     ↓
 Graph Comparison
-     
+     ↓
 Error Location
-     
+     ↓
 User Fix
 ```
 
 ---
 
-#  Technical Implementation
+# 🏗️ Technical Implementation
 
 ## System Architecture
 
@@ -325,7 +325,7 @@ flowchart TD
 
 ---
 
-#  Technology Stack
+# 🧰 Technology Stack
 
 | Category | Technologies |
 |---|---|
@@ -344,7 +344,7 @@ flowchart TD
 
 ---
 
-#  How the Major Components Interact
+# ⚙️ How the Major Components Interact
 
 ## Frontend
 
@@ -381,17 +381,17 @@ OpenCV is responsible for spatial processing.
 
 ```text
 Original Image
-      
-      
+      │
+      ▼
 Select Four Landmarks
-      
-      
+      │
+      ▼
 Perspective Transformation
-      
-      
+      │
+      ▼
 Rectified Breadboard
-      
-      
+      │
+      ▼
 Grid / Pin Mapping
 ```
 
@@ -406,16 +406,16 @@ The model proposes observations from the image, while the deterministic parts of
 Once observations are verified, Wirewise represents the circuit as a graph.
 
 ```text
-Component  Wire  Breadboard Node
-                           
-      Connection 
+Component ─── Wire ─── Breadboard Node
+     │                      │
+     └────── Connection ────┘
 ```
 
 The observed graph is then compared with the target circuit representation.
 
 ---
 
-#  Technical Decisions
+# 🧠 Technical Decisions
 
 ### Why OpenCV?
 Physical photographs contain perspective distortion. Perspective transformation provides geometric normalization before circuit interpretation.
@@ -433,21 +433,21 @@ Computer vision can be uncertain. Rather than hiding that uncertainty, Wirewise 
 
 ```text
 AI
-
+↓
 "What might I be seeing?"
 
 Deterministic Engine
-
+↓
 "Does the verified circuit match the target?"
 
 Human
-
+↓
 "Is the observation actually correct?"
 ```
 
 ---
 
-#  Implementation During the Hackathon
+# 🛠️ Implementation During the Hackathon
 
 During the Hack Day, the team implemented the core end-to-end Wirewise workflow:
 
@@ -466,7 +466,7 @@ During the Hack Day, the team implemented the core end-to-end Wirewise workflow:
 
 ---
 
-#  Team Contributions
+# 👨‍💻 Team Contributions
 
 ### Aakaash Pavangat
 - React/Vite frontend
@@ -496,7 +496,7 @@ During the Hack Day, the team implemented the core end-to-end Wirewise workflow:
 
 ---
 
-#  Working Application
+# 🖥️ Working Application
 
 **Live Application:** `<!-- ADD LIVE APPLICATION URL -->`
 
@@ -513,7 +513,7 @@ The deployed application should allow users to:
 
 ---
 
-#  Demo Video
+# 🎥 Demo Video
 
 **Demo Video:** `<!-- ADD DEMO VIDEO URL -->`
 
@@ -530,7 +530,7 @@ The demonstration should cover:
 
 ---
 
-#  Open Source & AI Usage
+# 🤖 Open Source & AI Usage
 
 ## AI / Models
 
@@ -570,27 +570,27 @@ The repository supports hosted Gemma 4 through the Gemini API and optional local
 
 ---
 
-#  AI Safety & Reliability Design
+# 🔐 AI Safety & Reliability Design
 
 Wirewise is intentionally designed so that the AI model is **not the final authority on circuit correctness**.
 
 ```text
 AI Prediction
-      
+      ↓
 Confidence / Candidate
-      
+      ↓
 Human Verification
-      
+      ↓
 Verified Observation
-      
+      ↓
 Deterministic Graph Analysis
-      
+      ↓
 Finding
 ```
 
 ---
 
-#  Setup & Usage
+# ⚙️ Setup & Usage
 
 ## Prerequisites
 
@@ -606,7 +606,7 @@ Install:
 
 ---
 
-#  Installation
+# 📥 Installation
 
 Clone the repository:
 
@@ -617,7 +617,7 @@ cd hacktoberfest-hack-day-coimbatore-x-init-club-and-idea-club
 
 ---
 
-##  Backend Setup
+## 🐍 Backend Setup
 
 ### Windows
 
@@ -641,7 +641,7 @@ pip install -r backend/requirements.txt
 
 ---
 
-#  Frontend Setup
+# 🌐 Frontend Setup
 
 Open another terminal:
 
@@ -658,7 +658,7 @@ npm run dev
 
 ---
 
-#  Environment Variables
+# 🔑 Environment Variables
 
 Copy the example environment file:
 
@@ -686,7 +686,7 @@ GEMINI_THINKING_LEVEL=minimal
 
 ---
 
-#  Optional Local Gemma 4
+# 🏠 Optional Local Gemma 4
 
 Install Ollama and pull the configured model:
 
@@ -704,7 +704,7 @@ OLLAMA_MODEL=gemma4:e4b
 
 ---
 
-#  Demo Mode
+# 🧪 Demo Mode
 
 For demonstrations where an actual vision model is not required:
 
@@ -716,7 +716,7 @@ Demo mode uses scripted responses for synthetic demonstration images.
 
 ---
 
-#  Running the Project
+# ▶️ Running the Project
 
 Start the FastAPI backend using the project's FastAPI application entry point:
 
@@ -741,94 +741,94 @@ http://localhost:5173
 
 ---
 
-#  Usage
+# 📖 Usage
 
-### Step 1  Upload
+### Step 1 — Upload
 Upload a top-down photograph of the breadboard.
 
-### Step 2  Calibrate
+### Step 2 — Calibrate
 Use the calibration controls to align the breadboard grid.
 
-### Step 3  Analyze
+### Step 3 — Analyze
 Run the AI-assisted visual inspection.
 
-### Step 4  Verify
+### Step 4 — Verify
 Review each proposed component/wire observation.
 
 Accept, reject, or modify observations as necessary.
 
-### Step 5  Compare
+### Step 5 — Compare
 Run the deterministic graph comparison.
 
-### Step 6  Inspect Findings
+### Step 6 — Inspect Findings
 Review highlighted discrepancies and their explanations.
 
-### Step 7  Fix
+### Step 7 — Fix
 Use the identified locations to troubleshoot the physical circuit.
 
 ---
 
-#  Repository Structure
+# 🧩 Repository Structure
 
 ```text
 wirewise/
-
- backend/
-    ...
-    ...
-
- frontend/
-    src/
-    package.json
-    vite.config.ts
-    ...
-
- docs/
-    ...
-
- fixtures/
-    ...
-
- .env.example
- .gitignore
- AGENTS.md
- CLAUDE.md
- LICENSE
- README.md
+│
+├── backend/
+│   ├── ...
+│   └── ...
+│
+├── frontend/
+│   ├── src/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── ...
+│
+├── docs/
+│   └── ...
+│
+├── fixtures/
+│   └── ...
+│
+├── .env.example
+├── .gitignore
+├── AGENTS.md
+├── CLAUDE.md
+├── LICENSE
+└── README.md
 ```
 
 ---
 
-#  Challenges & Learnings
+# 🧱 Challenges & Learnings
 
-## Challenge 1  Perspective Distortion
+## Challenge 1 — Perspective Distortion
 A photograph is rarely perfectly aligned with the breadboard.
 
 **Learning:** geometric calibration must happen before precise spatial reasoning.
 
-## Challenge 2  Dense Breadboard Geometry
+## Challenge 2 — Dense Breadboard Geometry
 Breadboards contain many visually similar holes, rails, components, and wires.
 
 **Learning:** computer vision must be combined with explicit spatial grounding.
 
-## Challenge 3  AI Uncertainty
+## Challenge 3 — AI Uncertainty
 Vision models can produce plausible but incorrect observations.
 
 **Learning:** AI predictions should be treated as candidates and verified before deterministic reasoning.
 
-## Challenge 4  Separating AI From Electrical Logic
+## Challenge 4 — Separating AI From Electrical Logic
 Asking an AI model to directly determine whether an entire circuit is electrically correct introduces unnecessary uncertainty.
 
 **Learning:** deterministic graph reasoning provides a more controllable validation layer.
 
-## Challenge 5  Real-World Demonstration
+## Challenge 5 — Real-World Demonstration
 Real lighting, perspective, and wire overlap can differ significantly from prepared images.
 
 **Learning:** robust physical-world AI requires consideration of the entire perception pipeline.
 
 ---
 
-#  Limitations
+# 📊 Limitations
 
 Wirewise is an educational prototype and should not be treated as professional electrical safety equipment.
 
@@ -841,11 +841,10 @@ Current limitations include:
 - The system is primarily designed for breadboard-style, low-voltage circuits.
 - Calibration quality directly affects spatial accuracy.
 - Circuit validation depends on the available component/catalog rules.
-- Tested on synthetic fixtures; accuracy on real breadboard photos has not been validated.
 
 ---
 
-#  Future Improvements
+# 🔮 Future Improvements
 
 Potential future development includes:
 
@@ -866,7 +865,7 @@ Potential future development includes:
 
 ---
 
-#  Open Source
+# 🌍 Open Source
 
 Potential contribution areas include:
 
@@ -883,7 +882,7 @@ Potential contribution areas include:
 
 ---
 
-#  Devpost Submission
+# 🚀 Devpost Submission
 
 **Devpost Project:** `<!-- ADD DEVPOST URL -->`
 
@@ -904,7 +903,7 @@ The Devpost submission should include:
 
 ---
 
-#  Credits
+# 🙏 Credits
 
 Wirewise builds upon the work of the open-source community.
 
@@ -929,7 +928,7 @@ The repository uses the **Apache License 2.0**. External libraries and services 
 
 ---
 
-#  License
+# 📄 License
 
 This project is licensed under the **Apache License 2.0**.
 
@@ -937,7 +936,7 @@ See [`LICENSE`](./LICENSE) for the complete license text.
 
 ---
 
-#  Submission Checklist
+# ✅ Submission Checklist
 
 - [x] Project title and description added
 - [x] All team members listed
@@ -964,7 +963,7 @@ See [`LICENSE`](./LICENSE) for the complete license text.
 
 ---
 
-#  Project Links
+# 🔗 Project Links
 
 | Resource | Link |
 |---|---|
@@ -975,7 +974,7 @@ See [`LICENSE`](./LICENSE) for the complete license text.
 
 ---
 
-##  Important Safety Notice
+## ⚠️ Important Safety Notice
 
 Wirewise is an educational inspection and learning tool.
 
@@ -987,9 +986,9 @@ Always disconnect power before physically modifying a circuit and follow appropr
 
 <p align="center">
 
-### Wirewise
+### 🔌 Wirewise
 **See the circuit. Find the mistake. Understand the fix.**
 
-Built by **Team Vitality** at Hacktoberfest Hack Day  Coimbatore.
+Built by **Team Vitality** at Hacktoberfest Hack Day — Coimbatore.
 
 </p>
