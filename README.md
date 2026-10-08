@@ -29,9 +29,30 @@ Hardware debugging remains one of the steepest learning curves in STEM education
 
 We selected this problem to demonstrate how open-weight vision models like Gemma 4 can be combined with deterministic graph logic to solve a genuine physical-world friction point. By keeping the AI focused on visual proposal and using deterministic graph algorithms for the actual circuit comparison, we create a reliable, visual linter for physical hardware that accelerates learning without compromising safety.
 
-## Solution
 
-[Describe the proposed solution and how it addresses the problem.]
+
+## Solution Overview
+
+Wirewise is a web-based visual inspection and learning application that compares a photograph of a physical, low-voltage breadboard circuit against a verified schematic template.
+
+### Core Workflow
+
+Wirewise guides users through a structured, human-in-the-loop inspection process:
+
+1. **Interactive Calibration**  
+   Upload a top-down photo of your breadboard and align key grid landmarks to correct perspective distortion using OpenCV.
+
+2. **AI-Assisted Vision Proposals**  
+   Gemma 4 analyzes the calibrated image to propose candidate components, wire endpoints, labels, and visible orientation with confidence scores.
+
+3. **Human Verification**  
+   Confirm, reject, or adjust the proposed observations. No uncertain model guess is ever silently accepted as a confirmed connection without user approval.
+
+4. **Deterministic Graph Comparison**  
+   Confirmed observations are compiled into an electrical connection graph and evaluated against the target template using NetworkX graph matching.
+
+5. **Evidence-Based Reporting**  
+   Wirewise overlays findings—such as missing wires, misplaced rows, or polarity errors—directly onto the original photo with clear explanations and pinpointed image regions.
 
 ### Key Features
 
