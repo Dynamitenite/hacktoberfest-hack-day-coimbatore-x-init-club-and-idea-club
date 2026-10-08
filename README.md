@@ -1,6 +1,6 @@
-# [Project Name]
+# Wirewise
 
-> [One-line description of the project and what it does.]
+> A visual inspection and learning tool that uses computer vision and Gemma 4 to compare real breadboard circuit photos against target circuit schematics.
 
 ## Team
 
@@ -19,11 +19,15 @@
 
 ### The Problem
 
-[Describe the problem being addressed, who is affected by it, and the context in which it occurs.]
+Electronics hobbyists, students, and educators working with solderless breadboards frequently run into small, hard-to-spot wiring errors. Miscounting a breadboard row by a single pin, placing a component across the wrong power rail, or inserting a polarized diode backward can cause a circuit to fail silently or behave unpredictably.
+
+Tracing physical circuits manually against a schematic is time-consuming and error-prone, especially for beginners. While modern software development relies on automated visual diffs and linters to catch mistakes instantly, physical prototyping lacks a reliable way to compare an assembled physical circuit against an intended wiring plan. Traditional computer vision struggles with the complex angles and overlapping wires of real-world breadboards, while raw AI vision models risk hallucinating connections or making unverified safety assumptions if relied on blindly.
 
 ### Why We Chose This Problem
 
-[Explain why the team selected this problem and why solving it is important.]
+Hardware debugging remains one of the steepest learning curves in STEM education and maker environments. Misplaced wires often lead to hours of unnecessary troubleshooting, student frustration, and abandoned projects.
+
+We selected this problem to demonstrate how open-weight vision models like Gemma 4 can be combined with deterministic graph logic to solve a genuine physical-world friction point. By keeping the AI focused on visual proposal and using deterministic graph algorithms for the actual circuit comparison, we create a reliable, visual linter for physical hardware that accelerates learning without compromising safety.
 
 ## Solution
 
