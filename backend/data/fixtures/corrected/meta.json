@@ -1,0 +1,27 @@
+{
+  "id": "corrected",
+  "title": "Synthetic demo image: ground jumper in row 15",
+  "description": "Synthetic demo image (computer-generated, not a real photo) of the same circuit with the ground jumper moved to row 15.",
+  "template_id": "uno_d9_led_220r",
+  "width": 1280,
+  "height": 960,
+  "synthetic": true,
+  "landmarks": {
+    "a1": {
+      "x": 201.8,
+      "y": 438.1
+    },
+    "a30": {
+      "x": 1035.1,
+      "y": 438.0
+    },
+    "j30": {
+      "x": 1047.0,
+      "y": 780.0
+    },
+    "j1": {
+      "x": 189.8,
+      "y": 762.7
+    }
+  }
+}

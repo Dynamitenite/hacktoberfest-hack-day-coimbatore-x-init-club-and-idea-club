@@ -1,0 +1,776 @@
+{
+  "generated": "2026-10-08T09:05:27.278039+00:00",
+  "provider": {
+    "name": "gemini",
+    "model": "gemma-4-31b-it",
+    "runtime": "hosted via Gemini API",
+    "integration": "Gemini API via google-genai (Files API)",
+    "is_demo": false,
+    "detail": null
+  },
+  "note": "Real response from the model named below, run on a SYNTHETIC demo image (computer-generated, not a real photo).",
+  "fixture_id": "corrected",
+  "image_kind": "synthetic demo image (computer-generated, not a real photo)",
+  "title": "Synthetic demo image: ground jumper in row 15",
+  "seconds": 56.3,
+  "calibration_status": "ok",
+  "raw_model_text": "```json\n{\n  \"items\": [\n    {\n      \"kind\": \"arduino\",\n      \"box_2d\": [60, 182, 372, 727],\n      \"confidence\": \"high\",\n      \"label_text\": \"ARDUINO UNO\"\n    },\n    {\n      \"kind\": \"wire\",\n      \"box_2d\": [331, 345, 463, 363],\n      \"confidence\": \"high\",\n      \"color\": \"green\",\n      \"leads\": {\n        \"end_a\": {\n          \"point\": [331, 354],\n          \"board_pin\": \"9\"\n        },\n        \"end_b\": {\n          \"point\": [463, 354],\n          \"hole\": \"a10\"\n        }\n      }\n    },\n    {\n      \"kind\": \"wire\",\n      \"box_2d\": [331, 456, 463, 474],\n      \"confidence\": \"high\",\n      \"color\": \"black\",\n      \"leads\": {\n        \"end_a\": {\n          \"point\": [331, 465],\n          \"board_pin\": \"GND\"\n        },\n        \"end_b\": {\n          \"point\": [463, 465],\n          \"hole\": \"a15\"\n        }\n      }\n    },\n    {\n      \"kind\": \"resistor\",\n      \"box_2d\": [473, 373, 511, 424],\n      \"confidence\": \"high\",\n      \"color_bands\": [\n        \"red\",\n        \"red\",\n        \"brown\",\n        \"gold\"\n      ],\n      \"leads\": {\n        \"1\": {\n          \"point\": [511, 354]\n        },\n        \"2\": {\n          \"point\": [511, 436]\n        }\n      }\n    },\n    {\n      \"kind\": \"led\",\n      \"box_2d\": [541, 427, 651, 487],\n      \"confidence\": \"high\",\n      \"leads\": {\n        \"anode\": {\n          \"point\": [541, 441]\n        },\n        \"cathode\": {\n          \"point\": [541, 462]\n        }\n      }\n    },\n    {\n      \"kind\": \"led\",\n      \"box_2d\": [730, 883, 813, 918],\n      \"confidence\": \"high\",\n      \"leads\": {\n        \"anode\": {\n          \"point\": [775, 893]\n        },\n        \"cathode\": {\n          \"point\": [775, 910]\n        }\n      }\n    }\n  ],\n  \"obscured_regions\": []\n}\n```",
+  "parsed_items": [
+    {
+      "kind": "arduino",
+      "box_2d": [
+        60.0,
+        182.0,
+        372.0,
+        727.0
+      ],
+      "confidence": "high",
+      "label_text": "ARDUINO UNO",
+      "color_bands": null,
+      "color": null,
+      "leads": {},
+      "orientation_note": null,
+      "description": null
+    },
+    {
+      "kind": "wire",
+      "box_2d": [
+        331.0,
+        345.0,
+        463.0,
+        363.0
+      ],
+      "confidence": "high",
+      "label_text": null,
+      "color_bands": null,
+      "color": "green",
+      "leads": {
+        "end_a": {
+          "point": [
+            331.0,
+            354.0
+          ],
+          "hole": null,
+          "board_pin": "9"
+        },
+        "end_b": {
+          "point": [
+            463.0,
+            354.0
+          ],
+          "hole": "a10",
+          "board_pin": null
+        }
+      },
+      "orientation_note": null,
+      "description": null
+    },
+    {
+      "kind": "wire",
+      "box_2d": [
+        331.0,
+        456.0,
+        463.0,
+        474.0
+      ],
+      "confidence": "high",
+      "label_text": null,
+      "color_bands": null,
+      "color": "black",
+      "leads": {
+        "end_a": {
+          "point": [
+            331.0,
+            465.0
+          ],
+          "hole": null,
+          "board_pin": "GND"
+        },
+        "end_b": {
+          "point": [
+            463.0,
+            465.0
+          ],
+          "hole": "a15",
+          "board_pin": null
+        }
+      },
+      "orientation_note": null,
+      "description": null
+    },
+    {
+      "kind": "resistor",
+      "box_2d": [
+        473.0,
+        373.0,
+        511.0,
+        424.0
+      ],
+      "confidence": "high",
+      "label_text": null,
+      "color_bands": [
+        "red",
+        "red",
+        "brown",
+        "gold"
+      ],
+      "color": null,
+      "leads": {
+        "1": {
+          "point": [
+            511.0,
+            354.0
+          ],
+          "hole": null,
+          "board_pin": null
+        },
+        "2": {
+          "point": [
+            511.0,
+            436.0
+          ],
+          "hole": null,
+          "board_pin": null
+        }
+      },
+      "orientation_note": null,
+      "description": null
+    },
+    {
+      "kind": "led",
+      "box_2d": [
+        541.0,
+        427.0,
+        651.0,
+        487.0
+      ],
+      "confidence": "high",
+      "label_text": null,
+      "color_bands": null,
+      "color": null,
+      "leads": {
+        "anode": {
+          "point": [
+            541.0,
+            441.0
+          ],
+          "hole": null,
+          "board_pin": null
+        },
+        "cathode": {
+          "point": [
+            541.0,
+            462.0
+          ],
+          "hole": null,
+          "board_pin": null
+        }
+      },
+      "orientation_note": null,
+      "description": null
+    },
+    {
+      "kind": "led",
+      "box_2d": [
+        730.0,
+        883.0,
+        813.0,
+        918.0
+      ],
+      "confidence": "high",
+      "label_text": null,
+      "color_bands": null,
+      "color": null,
+      "leads": {
+        "anode": {
+          "point": [
+            775.0,
+            893.0
+          ],
+          "hole": null,
+          "board_pin": null
+        },
+        "cathode": {
+          "point": [
+            775.0,
+            910.0
+          ],
+          "hole": null,
+          "board_pin": null
+        }
+      },
+      "orientation_note": null,
+      "description": null
+    }
+  ],
+  "parsed_obscured_regions": [],
+  "observations": [
+    {
+      "id": "ob_05179944",
+      "image_session_id": "corrected",
+      "observation_type": "board",
+      "candidate_part_or_endpoint": {
+        "part_id": "arduino_uno_r3",
+        "kind_hint": null,
+        "template_ref": null,
+        "label": "ARDUINO UNO",
+        "value_text": null,
+        "color_bands": null,
+        "value_ohms": null,
+        "color": null,
+        "endpoints": {},
+        "orientation_note": null,
+        "text": null,
+        "description": null
+      },
+      "bounding_box_or_polygon": [
+        {
+          "x": 232.95999999999998,
+          "y": 57.599999999999994
+        },
+        {
+          "x": 930.56,
+          "y": 57.599999999999994
+        },
+        {
+          "x": 930.56,
+          "y": 357.12
+        },
+        {
+          "x": 232.95999999999998,
+          "y": 357.12
+        }
+      ],
+      "confidence_label": "high",
+      "source": "gemma",
+      "status": "proposed",
+      "evidence": [
+        {
+          "source": "gemma",
+          "note": "Proposed by Gemma 4 from the photo (model gemma-4-31b-it, runtime hosted via Gemini API)."
+        }
+      ],
+      "original_candidate": null,
+      "original_source": null,
+      "display_name": "Development board (UNO R3 expected)",
+      "model_name": "gemma-4-31b-it",
+      "runtime": "hosted via Gemini API",
+      "is_demo_data": false,
+      "created_at": "2026-10-08T09:05:27.273044Z",
+      "updated_at": "2026-10-08T09:05:27.273044Z"
+    },
+    {
+      "id": "ob_9eaab564",
+      "image_session_id": "corrected",
+      "observation_type": "wire",
+      "candidate_part_or_endpoint": {
+        "part_id": "jumper_wire",
+        "kind_hint": "wire",
+        "template_ref": null,
+        "label": null,
+        "value_text": null,
+        "color_bands": null,
+        "value_ohms": null,
+        "color": "green",
+        "endpoints": {
+          "end_a": {
+            "kind": "board_pin",
+            "hole": null,
+            "board_pin": "D9",
+            "point": {
+              "x": 453.12,
+              "y": 317.76
+            },
+            "note": null
+          },
+          "end_b": {
+            "kind": "breadboard_hole",
+            "hole": "a10",
+            "board_pin": null,
+            "point": {
+              "x": 453.12,
+              "y": 444.48
+            },
+            "note": null
+          }
+        },
+        "orientation_note": null,
+        "text": null,
+        "description": null
+      },
+      "bounding_box_or_polygon": [
+        {
+          "x": 441.59999999999997,
+          "y": 317.76
+        },
+        {
+          "x": 464.64,
+          "y": 317.76
+        },
+        {
+          "x": 464.64,
+          "y": 444.48
+        },
+        {
+          "x": 441.59999999999997,
+          "y": 444.48
+        }
+      ],
+      "confidence_label": "medium",
+      "source": "gemma",
+      "status": "proposed",
+      "evidence": [
+        {
+          "source": "gemma",
+          "note": "Proposed by Gemma 4 from the photo (model gemma-4-31b-it, runtime hosted via Gemini API)."
+        },
+        {
+          "source": "gemma",
+          "note": "Endpoint is outside the breadboard grid; the model read the Arduino pin label as '9'."
+        },
+        {
+          "source": "opencv",
+          "note": "Endpoint snapped to hole a10 (offset 0.23 pitch)."
+        },
+        {
+          "source": "opencv",
+          "note": "Colour sampled along the wire: green."
+        }
+      ],
+      "original_candidate": null,
+      "original_source": null,
+      "display_name": "Green jumper wire D9 → a10",
+      "model_name": "gemma-4-31b-it",
+      "runtime": "hosted via Gemini API",
+      "is_demo_data": false,
+      "created_at": "2026-10-08T09:05:27.275039Z",
+      "updated_at": "2026-10-08T09:05:27.275039Z"
+    },
+    {
+      "id": "ob_b315c709",
+      "image_session_id": "corrected",
+      "observation_type": "wire",
+      "candidate_part_or_endpoint": {
+        "part_id": "jumper_wire",
+        "kind_hint": "wire",
+        "template_ref": null,
+        "label": null,
+        "value_text": null,
+        "color_bands": null,
+        "value_ohms": null,
+        "color": "black",
+        "endpoints": {
+          "end_a": {
+            "kind": "board_pin",
+            "hole": null,
+            "board_pin": "GND",
+            "point": {
+              "x": 595.2,
+              "y": 317.76
+            },
+            "note": null
+          },
+          "end_b": {
+            "kind": "breadboard_hole",
+            "hole": "a15",
+            "board_pin": null,
+            "point": {
+              "x": 595.2,
+              "y": 444.48
+            },
+            "note": null
+          }
+        },
+        "orientation_note": null,
+        "text": null,
+        "description": null
+      },
+      "bounding_box_or_polygon": [
+        {
+          "x": 583.6800000000001,
+          "y": 317.76
+        },
+        {
+          "x": 606.72,
+          "y": 317.76
+        },
+        {
+          "x": 606.72,
+          "y": 444.48
+        },
+        {
+          "x": 583.6800000000001,
+          "y": 444.48
+        }
+      ],
+      "confidence_label": "medium",
+      "source": "gemma",
+      "status": "proposed",
+      "evidence": [
+        {
+          "source": "gemma",
+          "note": "Proposed by Gemma 4 from the photo (model gemma-4-31b-it, runtime hosted via Gemini API)."
+        },
+        {
+          "source": "gemma",
+          "note": "Endpoint is outside the breadboard grid; the model read the Arduino pin label as 'GND'."
+        },
+        {
+          "source": "opencv",
+          "note": "Endpoint snapped to hole a15 (offset 0.23 pitch)."
+        },
+        {
+          "source": "opencv",
+          "note": "Colour sampled along the wire: black."
+        }
+      ],
+      "original_candidate": null,
+      "original_source": null,
+      "display_name": "Black jumper wire GND → a15",
+      "model_name": "gemma-4-31b-it",
+      "runtime": "hosted via Gemini API",
+      "is_demo_data": false,
+      "created_at": "2026-10-08T09:05:27.276041Z",
+      "updated_at": "2026-10-08T09:05:27.276041Z"
+    },
+    {
+      "id": "ob_5e16a0ce",
+      "image_session_id": "corrected",
+      "observation_type": "component",
+      "candidate_part_or_endpoint": {
+        "part_id": "resistor_220r",
+        "kind_hint": "resistor",
+        "template_ref": "R1",
+        "label": null,
+        "value_text": null,
+        "color_bands": [
+          "red",
+          "red",
+          "brown",
+          "gold"
+        ],
+        "value_ohms": 220.0,
+        "color": null,
+        "endpoints": {
+          "1": {
+            "kind": "breadboard_hole",
+            "hole": "c10",
+            "board_pin": null,
+            "point": {
+              "x": 453.12,
+              "y": 490.56
+            },
+            "note": null
+          },
+          "2": {
+            "kind": "breadboard_hole",
+            "hole": "c14",
+            "board_pin": null,
+            "point": {
+              "x": 558.08,
+              "y": 490.56
+            },
+            "note": null
+          }
+        },
+        "orientation_note": null,
+        "text": null,
+        "description": null
+      },
+      "bounding_box_or_polygon": [
+        {
+          "x": 477.44,
+          "y": 454.08
+        },
+        {
+          "x": 542.72,
+          "y": 454.08
+        },
+        {
+          "x": 542.72,
+          "y": 490.56
+        },
+        {
+          "x": 477.44,
+          "y": 490.56
+        }
+      ],
+      "confidence_label": "high",
+      "source": "gemma",
+      "status": "proposed",
+      "evidence": [
+        {
+          "source": "gemma",
+          "note": "Proposed by Gemma 4 from the photo (model gemma-4-31b-it, runtime hosted via Gemini API)."
+        },
+        {
+          "source": "opencv",
+          "note": "Endpoint snapped to hole c10 (offset 0.23 pitch)."
+        },
+        {
+          "source": "opencv",
+          "note": "Endpoint snapped to hole c14 (offset 0.32 pitch)."
+        },
+        {
+          "source": "catalog",
+          "note": "Colour bands red-red-brown-gold decode to 220 Ω (IEC 60062)."
+        }
+      ],
+      "original_candidate": null,
+      "original_source": null,
+      "display_name": "Resistor R1 · 220 Ω (bands read by gemma)",
+      "model_name": "gemma-4-31b-it",
+      "runtime": "hosted via Gemini API",
+      "is_demo_data": false,
+      "created_at": "2026-10-08T09:05:27.276041Z",
+      "updated_at": "2026-10-08T09:05:27.276041Z"
+    },
+    {
+      "id": "ob_d0d05491",
+      "image_session_id": "corrected",
+      "observation_type": "component",
+      "candidate_part_or_endpoint": {
+        "part_id": "led_5mm_red",
+        "kind_hint": "led",
+        "template_ref": "LED1",
+        "label": null,
+        "value_text": null,
+        "color_bands": null,
+        "value_ohms": null,
+        "color": null,
+        "endpoints": {
+          "anode": {
+            "kind": "breadboard_hole",
+            "hole": "d14",
+            "board_pin": null,
+            "point": {
+              "x": 564.48,
+              "y": 519.36
+            },
+            "note": null
+          },
+          "cathode": {
+            "kind": "breadboard_hole",
+            "hole": "d15",
+            "board_pin": null,
+            "point": {
+              "x": 591.36,
+              "y": 519.36
+            },
+            "note": null
+          }
+        },
+        "orientation_note": null,
+        "text": null,
+        "description": null
+      },
+      "bounding_box_or_polygon": [
+        {
+          "x": 546.56,
+          "y": 519.36
+        },
+        {
+          "x": 623.36,
+          "y": 519.36
+        },
+        {
+          "x": 623.36,
+          "y": 624.96
+        },
+        {
+          "x": 546.56,
+          "y": 624.96
+        }
+      ],
+      "confidence_label": "low",
+      "source": "gemma",
+      "status": "proposed",
+      "evidence": [
+        {
+          "source": "gemma",
+          "note": "Proposed by Gemma 4 from the photo (model gemma-4-31b-it, runtime hosted via Gemini API)."
+        },
+        {
+          "source": "opencv",
+          "note": "Endpoint snapped to hole d14 (offset 0.25 pitch)."
+        },
+        {
+          "source": "opencv",
+          "note": "Endpoint snapped to hole d15 (offset 0.26 pitch)."
+        },
+        {
+          "source": "gemma",
+          "note": "No polarity cue (lead length / flat edge) reported; polarity needs your confirmation."
+        }
+      ],
+      "original_candidate": null,
+      "original_source": null,
+      "display_name": "LED LED1",
+      "model_name": "gemma-4-31b-it",
+      "runtime": "hosted via Gemini API",
+      "is_demo_data": false,
+      "created_at": "2026-10-08T09:05:27.277041Z",
+      "updated_at": "2026-10-08T09:05:27.277041Z"
+    },
+    {
+      "id": "ob_e0ac9ae1",
+      "image_session_id": "corrected",
+      "observation_type": "component",
+      "candidate_part_or_endpoint": {
+        "part_id": "led_5mm_red",
+        "kind_hint": "led",
+        "template_ref": "LED1",
+        "label": null,
+        "value_text": null,
+        "color_bands": null,
+        "value_ohms": null,
+        "color": null,
+        "endpoints": {
+          "anode": {
+            "kind": "off_grid",
+            "hole": null,
+            "board_pin": null,
+            "point": {
+              "x": 1143.04,
+              "y": 744.0
+            },
+            "note": "Outside the calibrated grid and no pin label read."
+          },
+          "cathode": {
+            "kind": "off_grid",
+            "hole": null,
+            "board_pin": null,
+            "point": {
+              "x": 1164.8,
+              "y": 744.0
+            },
+            "note": "Outside the calibrated grid and no pin label read."
+          }
+        },
+        "orientation_note": null,
+        "text": null,
+        "description": null
+      },
+      "bounding_box_or_polygon": [
+        {
+          "x": 1130.24,
+          "y": 700.8
+        },
+        {
+          "x": 1175.04,
+          "y": 700.8
+        },
+        {
+          "x": 1175.04,
+          "y": 780.4799999999999
+        },
+        {
+          "x": 1130.24,
+          "y": 780.4799999999999
+        }
+      ],
+      "confidence_label": "low",
+      "source": "gemma",
+      "status": "proposed",
+      "evidence": [
+        {
+          "source": "gemma",
+          "note": "Proposed by Gemma 4 from the photo (model gemma-4-31b-it, runtime hosted via Gemini API)."
+        },
+        {
+          "source": "gemma",
+          "note": "No polarity cue (lead length / flat edge) reported; polarity needs your confirmation."
+        }
+      ],
+      "original_candidate": null,
+      "original_source": null,
+      "display_name": "LED LED1",
+      "model_name": "gemma-4-31b-it",
+      "runtime": "hosted via Gemini API",
+      "is_demo_data": false,
+      "created_at": "2026-10-08T09:05:27.278039Z",
+      "updated_at": "2026-10-08T09:05:27.278039Z"
+    }
+  ],
+  "score": {
+    "matches": [
+      {
+        "truth": "Green jumper wire D9 → a10",
+        "truth_endpoints": {
+          "end_a": "pin:D9",
+          "end_b": "a10"
+        },
+        "found": "Green jumper wire D9 → a10",
+        "found_endpoints": {
+          "end_a": "pin:D9",
+          "end_b": "a10"
+        },
+        "endpoints_correct": 2,
+        "endpoints_total": 2,
+        "bands_truth": null,
+        "bands_found": null
+      },
+      {
+        "truth": "Resistor R1 · 220 Ω (bands read by demo)",
+        "truth_endpoints": {
+          "1": "c10",
+          "2": "c14"
+        },
+        "found": "Resistor R1 · 220 Ω (bands read by gemma)",
+        "found_endpoints": {
+          "1": "c10",
+          "2": "c14"
+        },
+        "endpoints_correct": 2,
+        "endpoints_total": 2,
+        "bands_truth": [
+          "red",
+          "red",
+          "brown",
+          "gold"
+        ],
+        "bands_found": [
+          "red",
+          "red",
+          "brown",
+          "gold"
+        ]
+      },
+      {
+        "truth": "LED LED1",
+        "truth_endpoints": {
+          "anode": "d14",
+          "cathode": "d15"
+        },
+        "found": "LED LED1",
+        "found_endpoints": {
+          "anode": "d14",
+          "cathode": "d15"
+        },
+        "endpoints_correct": 2,
+        "endpoints_total": 2,
+        "bands_truth": null,
+        "bands_found": null
+      },
+      {
+        "truth": "Black jumper wire a15 → GND",
+        "truth_endpoints": {
+          "end_a": "a15",
+          "end_b": "pin:GND"
+        },
+        "found": "Black jumper wire GND → a15",
+        "found_endpoints": {
+          "end_a": "pin:GND",
+          "end_b": "a15"
+        },
+        "endpoints_correct": 2,
+        "endpoints_total": 2,
+        "bands_truth": null,
+        "bands_found": null
+      }
+    ],
+    "extra_items": [
+      "LED LED1"
+    ]
+  }
+}

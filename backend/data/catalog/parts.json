@@ -1,0 +1,142 @@
+{
+  "catalog_version": "2026-10-08",
+  "parts": [
+    {
+      "id": "arduino_uno_r3",
+      "kind": "dev_board",
+      "display_name": "Arduino UNO R3 (SKU A000066)",
+      "known_visual_features": [
+        "Rectangular development board with two long female header strips along opposite edges",
+        "USB-B connector and 2.1x5.5 mm barrel jack on one short edge",
+        "Digital header silkscreen labels 0-13 next to the pins; PWM-capable pins carry a '~' marker (pin 9 is PWM-capable)",
+        "Power header with labels such as 5V, 3.3V, GND, VIN"
+      ],
+      "terminals": [
+        {"name": "D9", "description": "Digital pin 9 / GPIO (JDIGITAL pin 10)", "silkscreen_hint": "~9"},
+        {"name": "GND", "description": "Ground. The board exposes several GND header pins (JANALOG pins 6 and 7, JDIGITAL pin 15); all are the board ground net.", "silkscreen_hint": "GND"},
+        {"name": "D8", "description": "Digital pin 8 / GPIO (JDIGITAL pin 9)", "silkscreen_hint": "8"},
+        {"name": "D10", "description": "Digital pin 10 / SPI SS (JDIGITAL pin 11)", "silkscreen_hint": "~10"},
+        {"name": "5V", "description": "+5V power rail (JANALOG pin 5)", "silkscreen_hint": "5V"},
+        {"name": "3V3", "description": "+3V3 power rail (JANALOG pin 4)", "silkscreen_hint": "3.3V"}
+      ],
+      "polar": false,
+      "orientation_metadata": null,
+      "internal_nets": [
+        {"name": "GND", "terminals": ["GND"], "note": "Every GND header pin is modelled as the single terminal 'GND'."}
+      ],
+      "electrical_limits": [],
+      "electrical_limits_note": "No current or voltage limits are stored for this MVP, so Wirewise does not check pin current. Anything not stored here is reported as NOT CHECKED.",
+      "sources": [
+        {
+          "title": "Arduino UNO R3 datasheet (A000066), section 5 Connector Pinouts (JANALOG / JDIGITAL tables)",
+          "url": "https://docs.arduino.cc/resources/datasheets/A000066-datasheet.pdf",
+          "checked_on": "2026-10-08"
+        },
+        {
+          "title": "Arduino UNO R3 product documentation",
+          "url": "https://docs.arduino.cc/hardware/uno-rev3/",
+          "checked_on": "2026-10-08"
+        }
+      ],
+      "verification_note": "Pin names and functions were copied from the official datasheet connector tables. Silkscreen hints are visual cues only and are never used as electrical facts. Clone boards may differ; the user must confirm their board matches the UNO R3 header layout."
+    },
+    {
+      "id": "resistor_220r",
+      "kind": "resistor",
+      "display_name": "Resistor, 220 Ω, axial through-hole, 4-band",
+      "known_visual_features": [
+        "Small cylindrical body with two axial leads",
+        "4-band colour code red-red-brown (+ tolerance band, commonly gold) encodes 220 Ω"
+      ],
+      "terminals": [
+        {"name": "1", "description": "Lead 1 (non-polar)"},
+        {"name": "2", "description": "Lead 2 (non-polar)"}
+      ],
+      "polar": false,
+      "orientation_metadata": {"interchangeable_terminals": ["1", "2"]},
+      "nominal_value": {"quantity": "resistance", "value": 220, "unit": "ohm", "color_bands": ["red", "red", "brown"]},
+      "electrical_limits": [],
+      "electrical_limits_note": "Power rating is not stored, so it is not checked.",
+      "sources": [
+        {
+          "title": "IEC 60062 resistor colour code (red = 2, brown = multiplier x10)",
+          "url": "https://webstore.iec.ch/en/publication/31414",
+          "checked_on": "2026-10-08"
+        }
+      ],
+      "verification_note": "Only the nominal value implied by the colour code is stored. Wirewise checks that the user-confirmed value equals this nominal value; it does not measure resistance."
+    },
+    {
+      "id": "led_5mm_red",
+      "kind": "led",
+      "display_name": "LED, 5 mm through-hole, red",
+      "known_visual_features": [
+        "Domed 5 mm epoxy lens with two leads",
+        "Anode lead is usually the longer lead",
+        "Cathode side usually has a flat spot on the lens rim and the larger internal anvil"
+      ],
+      "terminals": [
+        {"name": "anode", "description": "Anode (+)"},
+        {"name": "cathode", "description": "Cathode (-)"}
+      ],
+      "polar": true,
+      "orientation_metadata": {
+        "polarity_cues": ["longer lead = anode", "flat rim = cathode"],
+        "note": "Lead length is unreliable once leads are trimmed. Polarity must be confirmed by the user."
+      },
+      "electrical_limits": [],
+      "electrical_limits_note": "Forward voltage and current ratings vary by manufacturer and are not stored. LED current is NOT CHECKED.",
+      "sources": [
+        {
+          "title": "SparkFun: Light-Emitting Diodes (LEDs) - polarity identification",
+          "url": "https://learn.sparkfun.com/tutorials/light-emitting-diodes-leds/all",
+          "checked_on": "2026-10-08"
+        }
+      ],
+      "verification_note": "Only terminal names and polarity cues are stored. No electrical rating is assumed."
+    },
+    {
+      "id": "jumper_wire",
+      "kind": "wire",
+      "display_name": "Jumper wire (male-male)",
+      "known_visual_features": ["Insulated flexible wire with a pin at each end; any colour"],
+      "terminals": [
+        {"name": "end_a", "description": "First end"},
+        {"name": "end_b", "description": "Second end"}
+      ],
+      "polar": false,
+      "orientation_metadata": {"interchangeable_terminals": ["end_a", "end_b"]},
+      "electrical_limits": [],
+      "electrical_limits_note": "Modelled as an ideal conductor. Broken or poorly seated wires cannot be detected from a photo.",
+      "sources": [],
+      "verification_note": "Generic conductor; no ratings stored."
+    }
+  ],
+  "breadboards": [
+    {
+      "id": "half_400",
+      "display_name": "Half-size solderless breadboard, 400 tie points (30 rows, a-j)",
+      "rows": 30,
+      "columns": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+      "pitch_mm": 2.54,
+      "column_offsets_pitch": {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 7, "g": 8, "h": 9, "i": 10, "j": 11},
+      "connectivity_rules": [
+        {"id": "strip_left", "description": "In each numbered row, holes a, b, c, d and e are connected to each other.", "columns": ["a", "b", "c", "d", "e"]},
+        {"id": "strip_right", "description": "In each numbered row, holes f, g, h, i and j are connected to each other.", "columns": ["f", "g", "h", "i", "j"]},
+        {"id": "center_channel", "description": "The centre channel separates e from f. The two halves of a row are NOT connected."}
+      ],
+      "unsupported_regions": [
+        {"id": "power_rails", "description": "The +/- power rails are not modelled in this MVP because rail segmentation differs between manufacturers. Connections to rails are reported as NOT CHECKED."}
+      ],
+      "calibration_landmarks": ["a1", "a30", "j30", "j1"],
+      "sources": [
+        {
+          "title": "Adafruit Half Sized Premium Breadboard - 400 Tie Points (product 64)",
+          "url": "https://www.adafruit.com/product/64",
+          "checked_on": "2026-10-08"
+        }
+      ],
+      "verification_note": "Terminal-strip geometry follows the standard 0.1 inch (2.54 mm) grid with a 0.3 inch centre channel (e to f). Check that your board's rows are numbered 1-30 and columns lettered a-j before using this model."
+    }
+  ]
+}

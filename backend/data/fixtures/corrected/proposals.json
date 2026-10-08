@@ -1,0 +1,135 @@
+{
+  "items": [
+    {
+      "kind": "arduino",
+      "box_2d": [
+        74.4,
+        184.1,
+        366.0,
+        729.4
+      ],
+      "confidence": "high",
+      "label_text": "ARDUINO UNO"
+    },
+    {
+      "kind": "wire",
+      "color": "green",
+      "confidence": "high",
+      "box_2d": [
+        325.0,
+        341.6,
+        471.4,
+        366.8
+      ],
+      "leads": {
+        "end_a": {
+          "point": [
+            341.7,
+            354.1
+          ],
+          "board_pin": "9"
+        },
+        "end_b": {
+          "point": [
+            454.8,
+            354.3
+          ]
+        }
+      }
+    },
+    {
+      "kind": "resistor",
+      "confidence": "high",
+      "color_bands": [
+        "red",
+        "red",
+        "brown",
+        "gold"
+      ],
+      "box_2d": [
+        467.0,
+        335.6,
+        541.3,
+        457.1
+      ],
+      "leads": {
+        "1": {
+          "point": [
+            518.4,
+            352.8
+          ]
+        },
+        "2": {
+          "point": [
+            518.3,
+            440.0
+          ]
+        }
+      }
+    },
+    {
+      "kind": "led",
+      "confidence": "medium",
+      "color": "red",
+      "box_2d": [
+        516.6,
+        418.3,
+        645.7,
+        487.3
+      ],
+      "orientation_note": "left lead (row 14) looks longer; flat rim on the right",
+      "leads": {
+        "anode": {
+          "point": [
+            550.3,
+            441.8
+          ]
+        },
+        "cathode": {
+          "point": [
+            547.9,
+            463.9
+          ]
+        }
+      }
+    },
+    {
+      "kind": "wire",
+      "color": "black",
+      "confidence": "medium",
+      "box_2d": [
+        324.0,
+        450.1,
+        475.1,
+        476.5
+      ],
+      "leads": {
+        "end_a": {
+          "point": [
+            458.4,
+            462.6
+          ]
+        },
+        "end_b": {
+          "point": [
+            340.7,
+            464.0
+          ],
+          "board_pin": "GND"
+        }
+      }
+    },
+    {
+      "kind": "capacitor",
+      "confidence": "low",
+      "box_2d": [
+        720.6,
+        874.6,
+        783.1,
+        921.4
+      ],
+      "description": "small orange disc beside the breadboard, possibly not inserted"
+    }
+  ],
+  "obscured_regions": []
+}
