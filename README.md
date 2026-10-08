@@ -9,7 +9,7 @@
 
 | Member | Contribution   |
 | ------ | -------------- |
-| Aakaash Pavangat | [Contribution] |
+| Aakaash Pavangat | Frontend Lead & Interactive UI:** Built the Next.js App Router interface, interactive Canvas/SVG annotation overlays for bounding polygons, landmark calibration controls, and the evidence-based findings report UX. | |
 | Tanala Phanendra | [Contribution] |
 | Mohammad Liyakat Ali | [Contribution] |
 | Govind Shrundan Reddy | [Contribution] |
