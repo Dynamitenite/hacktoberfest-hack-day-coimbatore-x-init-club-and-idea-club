@@ -164,7 +164,7 @@ def normalize_board_pin(label: str | None, part: PartCatalogItem) -> str | None:
     if not label:
         return None
     text = label.strip().upper().replace(" ", "")
-    text = text.lstrip("~")
+    text = text.lstrip("~-–—_")  # the PWM tilde printed before 9 is often read as a dash
     names = {t.name.upper(): t.name for t in part.terminals}
     if text in names:
         return names[text]

@@ -1,6 +1,6 @@
 # Wirewise demo script (about two minutes)
 
-Before starting: Ollama is running with `gemma4:e4b` installed, the backend and `npm run dev` are up, and the header shows **Gemma 4 · gemma4:e4b · Model ready/loaded**. Run one throwaway analysis beforehand so the model is already loaded (the first request loads it and is slower).
+Before starting: `.env` has `VISION_PROVIDER=gemini`, a valid `GEMINI_API_KEY` and `GEMMA_TIMEOUT_SECONDS=180`; the backend and `npm run dev` are up; and the header shows **Gemma 4 · provider gemini · model · hosted via Gemini API**. A Gemma call takes 20–60 s, and the hosted API is sometimes overloaded (HTTP 500/503/504): if so, the app says so and you press the button again. Consider `GEMINI_MODEL=gemma-4-26b-a4b-it` for faster answers, with less accurate colour-band reading. (For the local path, see the README's Ollama section.)
 
 The demo uses the two **synthetic demo images** (computer-generated, not real photos): *ground jumper in row 16* (seeded mismatch) and *ground jumper in row 15* (corrected). Say so out loud. Anyone can also upload their own photo.
 

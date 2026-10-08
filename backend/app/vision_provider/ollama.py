@@ -43,6 +43,7 @@ def _tagged(name: str) -> str:
 class OllamaProvider:
     def __init__(self, settings: Settings, transport: httpx.BaseTransport | None = None) -> None:
         self.settings = settings
+        self.last_raw_text: str | None = None  # the model's unparsed answer, kept for the proof script
         self._transport = transport  # tests inject httpx.MockTransport; production uses the real network
         self.info = ProviderInfo(
             name="ollama",
@@ -127,6 +128,7 @@ class OllamaProvider:
             text = str(response.json().get("response", ""))
         except ValueError as exc:
             raise ProviderError("Ollama returned a reply that was not JSON.", code="bad_response") from exc
+        self.last_raw_text = text
         if not text.strip():
             raise ProviderError("Gemma returned an empty answer. Try again.", retriable=True, code="bad_response")
         return parse_response(text)

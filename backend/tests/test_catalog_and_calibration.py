@@ -162,3 +162,10 @@ def test_large_photos_are_downscaled_and_exif_stripped():
     out = validate_and_normalize(buf.getvalue(), "image/jpeg", 20)
     assert max(out.width, out.height) == 2000
     assert b"SecretCameraMaker" not in out.jpeg_bytes
+
+
+def test_pin_label_with_misread_tilde_still_maps_to_d9(catalog):
+    uno = catalog.parts["arduino_uno_r3"]
+    for label in ("9", "~9", "-9", "–9", "D9", " ~ 9 "):
+        assert normalize_board_pin(label, uno) == "D9"
+    assert normalize_board_pin("-", uno) is None and normalize_board_pin("A0", uno) is None

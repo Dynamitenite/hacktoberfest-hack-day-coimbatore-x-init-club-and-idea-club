@@ -84,7 +84,7 @@ If the Gemini key is missing or rejected, Ollama is not running, the model is no
 | `ollama` | Optional local path: Gemma 4 (`gemma4:e4b` by default) through Ollama on your machine. This is also the server default if `VISION_PROVIDER` is not set at all. |
 | `demo` | **Tests only.** Scripted answers for the bundled synthetic demo images. No model runs. When active, the UI shows a persistent "DEMO MODE: no model is analyzing this image" banner and every observation is labelled demo data. It can only be enabled by setting `VISION_PROVIDER=demo`. |
 
-Each analysis sends one image with a configurable timeout (`GEMMA_TIMEOUT_SECONDS`, default 60 s) and is never retried automatically.
+Each analysis sends one image with a configurable timeout and is never retried automatically. The server default is 60 s; `.env.example` sets `GEMMA_TIMEOUT_SECONDS=180` because hosted `gemma-4-31b-it` needed 56–62 s per image in testing. The hosted API was also intermittently overloaded (HTTP 500/503/504); the app reports that and you press the button again.
 
 ## How Gemma 4 contributes
 
@@ -105,7 +105,7 @@ What Gemma 4 does **not** do:
 
 Every proposal records and displays the model name and runtime that produced it.
 
-A saved real Gemma 4 response to a synthetic demo image is planned at `docs/gemma_sample_response.json`; see "Verification status" below for whether it exists yet.
+Real Gemma 4 responses to the synthetic demo images are saved in [`docs/gemma_sample_response.json`](docs/gemma_sample_response.json) (31B, corrected image) and [`docs/gemma_sample_response_26b_seeded.json`](docs/gemma_sample_response_26b_seeded.json) (26B A4B, seeded image). An honest assessment of what Gemma did well and badly is in [docs/GEMMA_PROOF.md](docs/GEMMA_PROOF.md): it found every part and wire and the seeded row-16 mistake, but called an orange decoy an LED, and the 26B model misread the resistor colour bands.
 
 ## Supported hardware
 
@@ -126,7 +126,7 @@ Only low-voltage, allowlisted circuits are supported. Mains voltage, household w
 - Power rails are not modelled; anything depending on them is `NOT CHECKED`.
 - Wirewise only sees what is visible and confirmed. Hidden or out-of-frame wiring, damaged parts, bad contacts, voltages and currents are not checked, and catalog data could itself be wrong.
 - Calibration is manual and assumes a roughly top-down photo of the whole board. Heavy glare, blur or a tilted board can fail the grid check.
-- A small local model is imprecise: expect missed items and wrong hole positions, which is why every proposal needs your confirmation and OpenCV snaps positions.
+- Gemma 4 makes mistakes (a decoy object called an LED, misread resistor bands, run-to-run differences), which is why every proposal needs your confirmation and OpenCV snaps positions to the grid.
 - Photo guidance: whole breadboard in frame, mostly top-down, good light, no covered wires or labels.
 - Tested on synthetic fixtures; accuracy on real breadboard photos has not been validated.
 - `MATCHES TEMPLATE` means the visible, confirmed connections match the template. It is not a safety statement.

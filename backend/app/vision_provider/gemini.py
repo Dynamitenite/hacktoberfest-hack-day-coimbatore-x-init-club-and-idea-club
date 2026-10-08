@@ -37,6 +37,7 @@ class GeminiProvider:
             )
         self.settings = settings
         self._client = client
+        self.last_raw_text: str | None = None  # the model's unparsed answer, kept for the proof script
         self.info = ProviderInfo(
             name="gemini",
             model=settings.gemini_model,
@@ -93,6 +94,7 @@ class GeminiProvider:
                     client.files.delete(name=uploaded.name)
                 except Exception:
                     pass
+        self.last_raw_text = text
         if not text.strip():
             raise ProviderError("Gemma returned an empty answer. Try again.", retriable=True, code="bad_response")
         return parse_response(text)
@@ -107,6 +109,13 @@ def _safe_error(exc: Exception, key: str) -> tuple[str, str]:
     lowered = msg.lower()
     if "api key" in lowered or "permission" in lowered or "401" in lowered or "403" in lowered:
         return "The Gemini API rejected the request (check GEMINI_API_KEY and that Gemma 4 is enabled for your project).", "unavailable"
+    status = getattr(exc, "code", None)
+    if status in (500, 502, 503, 504) or any(t in lowered for t in ("unavailable", "deadline", "overloaded", "high demand", "internal")):
+        return (
+            f"The Gemini API is temporarily overloaded or failed on its side (HTTP {status or '5xx'}). "
+            "Nothing was analyzed and Wirewise does not retry or fall back. Wait a moment and press the button again.",
+            "unavailable",
+        )
     if "429" in lowered or "quota" in lowered or "rate" in lowered:
         return "The Gemini API rate limit or quota was reached. Wait a moment and try again.", "unavailable"
     if "timeout" in lowered or "timed out" in lowered or "connect" in lowered:
