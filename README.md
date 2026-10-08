@@ -9,9 +9,9 @@
 
 | Member | Contribution   |
 | ------ | -------------- |
-| Aakaash Pavangat | Frontend Lead & Interactive UI:** Built the Next.js App Router interface, interactive Canvas/SVG annotation overlays for bounding polygons, landmark calibration controls, and the evidence-based findings report UX. | |
-| Tanala Phanendra | [Contribution] |
-| Mohammad Liyakat Ali | [Contribution] |
+| Aakaash Pavangat | **Frontend Lead & Interactive UI:**  Built the Next.js App Router interface, interactive Canvas/SVG annotation overlays for bounding polygons, landmark calibration controls, and the evidence-based findings report UX. | |
+| Tanala Phanendra | **AI Vision Pipeline Lead:** Integrated Gemma 4 multimodal vision, designed the server-side provider adapter architecture, optimized prompt engineering for structured detection outputs, and implemented the demo mode fallback. |
+| Mohammad Liyakat Ali |  |
 | Govind Shrundan Reddy | [Contribution] |
 
 
