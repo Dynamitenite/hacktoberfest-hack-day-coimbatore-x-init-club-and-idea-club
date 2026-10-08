@@ -498,7 +498,7 @@ During the Hack Day, the team implemented the core end-to-end Wirewise workflow:
 
 #  Working Application
 
-**Live Application:** `<!-- ADD LIVE APPLICATION URL -->`
+**Live Application:** `(http://localhost:5173)`
 
 The deployed application should allow users to:
 
