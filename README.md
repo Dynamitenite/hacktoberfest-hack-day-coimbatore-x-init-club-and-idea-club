@@ -513,22 +513,6 @@ The deployed application should allow users to:
 
 ---
 
-#  Demo Video
-
-**Demo Video:** `<!-- ADD DEMO VIDEO URL -->`
-
-The demonstration should cover:
-
-1. Opening Wirewise.
-2. Uploading a sample breadboard image.
-3. Performing calibration.
-4. Running the vision analysis.
-5. Reviewing AI observations.
-6. Correcting/confirming observations.
-7. Running circuit comparison.
-8. Viewing the final discrepancy report.
-
----
 
 #  Open Source & AI Usage
 
