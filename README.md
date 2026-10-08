@@ -1,3 +1,5 @@
+
+https://github.com/user-attachments/assets/c7895d9c-b824-4d4b-a66d-9569ace96787
 # Wirewise
 
 > **AI-assisted visual inspection and learning for physical breadboard circuits.**
@@ -487,9 +489,9 @@ During the Hack Day, the team implemented the core end-to-end Wirewise workflow:
 - Four-point perspective transformation
 - Breadboard coordinate mapping
 - Physical image-to-grid transformation
-
-### Govind Shrundan Reddy
 - FastAPI backend architecture
+  
+### Govind Shrundan Reddy
 - NetworkX graph engine
 - Pydantic models
 - Catalog-rule validation
@@ -498,22 +500,15 @@ During the Hack Day, the team implemented the core end-to-end Wirewise workflow:
 
 #  Working Application
 
-**Live Application:** `(http://localhost:5173)`
-
-The deployed application should allow users to:
-
-1. Upload a breadboard photograph.
-2. Calibrate the breadboard perspective.
-3. Run AI-assisted visual analysis.
-4. Review and correct AI observations.
-5. Compare the verified circuit with the target.
-6. Inspect visual findings and discrepancies.
-
-> **Before final submission:** replace the placeholder with the actual deployed URL if the project is publicly hosted.
+**Live Application:** `(https://nuts-steady-gate-frequency.trycloudflare.com/)`
 
 ---
 
+#  Demo Video
 
+**Demo Video:** `Uploading Wirewise - Brave 2026-10-08 15-57-51.mp4…`
+
+---
 #  Open Source & AI Usage
 
 ## AI / Models
@@ -867,26 +862,6 @@ Potential contribution areas include:
 
 ---
 
-#  Devpost Submission
-
-**Devpost Project:** `<!-- ADD DEVPOST URL -->`
-
-The Devpost submission should include:
-
-- Project description
-- Problem statement
-- Solution
-- Technical implementation
-- Innovation
-- Team members
-- Repository link
-- Live demo
-- Demo video
-- Screenshots/media
-- AI/open-source usage
-- Challenges and learnings
-
----
 
 #  Credits
 
