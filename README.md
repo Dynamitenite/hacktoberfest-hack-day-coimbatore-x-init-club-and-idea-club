@@ -9,10 +9,10 @@
 
 | Member | Contribution   |
 | ------ | -------------- |
-| Aakaash Pavangat | **Frontend Lead & Interactive UI:**  Built the Next.js App Router interface, interactive Canvas/SVG annotation overlays for bounding polygons, landmark calibration controls, and the evidence-based findings report UX. | |
-| Tanala Phanendra | **AI Vision Pipeline Lead:** Integrated Gemma 4 multimodal vision, designed the server-side provider adapter architecture, optimized prompt engineering for structured detection outputs, and implemented the demo mode fallback. |
-| Mohammad Liyakat Ali |  |
-| Govind Shrundan Reddy | [Contribution] |
+| Aakaash Pavangat | ** Designed and built the Next.js App Router frontend, interactive Canvas/SVG image annotation tools, breadboard calibration handle controls, and the visual findings report UI.|
+| Tanala Phanendra | ** Integrated the Gemma 4 vision model API, engineered structured prompts for candidate component/wire extraction, architected the server-side provider adapter, and created the offline demo provider fallback.|
+| Mohammad Liyakat Ali | ** Developed the OpenCV image processing pipeline, implemented the 4-point perspective warp transformation algorithms, and mapped physical photo coordinates to breadboard pin grids. |
+| Govind Shrundan Reddy | ** Architected the FastAPI backend server, built the NetworkX deterministic graph comparison engine, defined the Pydantic data models, and implemented the catalog rules validator. |
 
 
 ## Problem Statement
