@@ -209,7 +209,7 @@ def _provider_health() -> dict:
             base.update(ready=True, message="Model is loaded and ready.")
         return base
     # gemini: reachability of a hosted API is not probed (no call, no cost); a key being present is the check.
-    base.update(model=settings.gemini_model, runtime="Gemini API (hosted)", reachable=bool(settings.gemini_api_key),
+    base.update(model=settings.gemini_model, runtime="hosted via Gemini API", reachable=bool(settings.gemini_api_key),
                 model_installed=bool(settings.gemini_api_key), model_loaded=bool(settings.gemini_api_key),
                 ready=bool(settings.gemini_api_key))
     base["message"] = "API key configured (the hosted model is contacted only during an analysis)." if settings.gemini_api_key else "GEMINI_API_KEY is not set."

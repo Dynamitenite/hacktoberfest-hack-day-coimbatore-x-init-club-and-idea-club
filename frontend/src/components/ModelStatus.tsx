@@ -11,7 +11,7 @@ export default function ModelStatus({ health, checking, onRecheck }: { health: H
     icon = "!";
     headline = "No model is running";
   } else if (!health.reachable) {
-    headline = `${health.provider === "ollama" ? "Ollama" : "Gemini API"} not reachable`;
+    headline = health.provider === "ollama" ? "Ollama not reachable" : "API key missing";
   } else if (!health.model_installed) {
     headline = "Model not installed";
   } else if (health.model_loaded) {
@@ -28,6 +28,7 @@ export default function ModelStatus({ health, checking, onRecheck }: { health: H
       <span className="model-status-icon" aria-hidden>{icon}</span>
       <span>
         <strong>{health.demo_mode ? "DEMO" : "Gemma 4"}</strong>
+        <> · provider <span className="mono">{health.provider}</span></>
         {health.model ? <> · <span className="mono">{health.model}</span></> : null}
         <span className="model-status-sub">
           {health.demo_mode ? "" : health.runtime ? `${health.runtime} · ` : ""}

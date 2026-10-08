@@ -338,3 +338,13 @@ def test_an_arbitrary_uploaded_image_works_end_to_end(client, monkeypatch):
     assert r.status_code == 200 and r.json()["provider"]["name"] == "ollama"
     rep = client.get(f"/api/sessions/{sid}/report").json()
     assert rep["overall_status"] == "NEEDS REVIEW"  # nothing confirmed, grid unverified: never a pass
+
+
+def test_health_reports_hosted_gemini_provider(client, monkeypatch):
+    monkeypatch.setattr(main, "settings", replace(main.settings, vision_provider="gemini", gemini_api_key=""))
+    h = client.get("/api/health").json()
+    assert (h["provider"], h["model"], h["runtime"]) == ("gemini", "gemma-4-31b-it", "hosted via Gemini API")
+    assert h["ready"] is False and "GEMINI_API_KEY" in h["message"] and h["setup_hint"] and h["demo_mode"] is False
+    monkeypatch.setattr(main, "settings", replace(main.settings, vision_provider="gemini", gemini_api_key="TESTKEY123"))
+    h = client.get("/api/health").json()
+    assert h["ready"] is True and "TESTKEY123" not in json.dumps(h)

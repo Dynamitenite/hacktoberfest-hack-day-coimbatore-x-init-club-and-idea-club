@@ -2,14 +2,14 @@
 
 **Check your breadboard against the circuit you meant to build.**
 
-Wirewise compares a photo of a real low-voltage breadboard circuit with an intended circuit template. A **local Gemma 4 model** looks at the photo and *proposes* what it sees. You confirm, reject or correct each proposal. A deterministic graph comparison then reports where the confirmed wiring differs from the template, with the evidence for every finding.
+Wirewise compares a photo of a real low-voltage breadboard circuit with an intended circuit template. **Gemma 4** looks at the photo and *proposes* what it sees. You confirm, reject or correct each proposal. A deterministic graph comparison then reports where the confirmed wiring differs from the template, with the evidence for every finding.
 
 It is an inspection and learning aid. It never powers, controls or talks to hardware, and it never says a circuit is safe to power.
 
 Built for the Hacktoberfest Hack Day (Open-Source AI Hack Day, MLH): main track plus the "Best Use of Gemma 4" challenge.
 
-- **Gemma 4 model:** `gemma4:e4b` (Gemma 4 E4B)
-- **Runtime:** [Ollama](https://ollama.com), running locally on your machine
+- **Gemma 4 model (demo configuration):** `gemma-4-31b-it`, hosted via the Gemini API (`VISION_PROVIDER=gemini`)
+- **Optional local path:** `gemma4:e4b` through [Ollama](https://ollama.com) (`VISION_PROVIDER=ollama`)
 - **License:** Apache-2.0
 
 ## The problem
@@ -27,25 +27,23 @@ Finding types: wrong row, wrong pin, polarity mismatch, missing connection, unex
 
 ## Setup
 
-Requirements: Python 3.11+, Node.js 20.19+ (or 22.12+), and [Ollama](https://ollama.com/download).
+Requirements: Python 3.11+, Node.js 20.19+ (or 22.12+), and a Gemini API key for the hosted Gemma 4 path (or Ollama for the local path, below).
 
-### 1. Local Gemma 4 runtime (Ollama)
+### 1. Configure the provider
 
 ```bash
-# Install Ollama from https://ollama.com/download, start it, then:
-ollama pull gemma4:e4b        # about 9.6 GB download; E4B needs roughly 10 GB of free RAM
+cp .env.example .env              # then paste your key after GEMINI_API_KEY=
 ```
 
-The tag `gemma4:e4b` was checked against the [Ollama library page](https://ollama.com/library/gemma4) on 2026-10-08 (other tags there: `e2b`, `12b`, `26b`, `31b`). The 26B and 31B variants need far more memory; pick a tag your machine can hold and set `OLLAMA_MODEL` accordingly. On a machine without a GPU, the first analysis loads the model and can be slow, so raise `GEMMA_TIMEOUT_SECONDS` if it times out.
+`.env.example` sets `VISION_PROVIDER=gemini`: Gemma 4 hosted via the Gemini API. Get a key at https://aistudio.google.com/apikey. The key is read only by the backend and never reaches the browser. Without a key the header shows an error and the app refuses to analyze; it does not fall back to demo data.
 
 ### 2. Backend
 
 ```bash
 cd backend
 python -m venv .venv
-.venv\Scripts\activate           # Windows;  macOS/Linux: source .venv/bin/activate
+.venv\Scriptsctivate           # Windows;  macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-cp ../.env.example ../.env        # optional: defaults already point at local Ollama
 uvicorn app.main:app --port 8000
 ```
 
@@ -59,11 +57,22 @@ npm run dev                       # http://localhost:5173, proxies /api to the b
 
 For a production build: `npm run build && npm run preview`. The browser only talks to the Vite server; `/api` is proxied to `BACKEND_URL` (default `http://127.0.0.1:8000`), so no key and no backend address are in browser code.
 
+### Optional: local Gemma 4 with Ollama
+
+Run the model on your own machine instead of the hosted API (the photo then never leaves it):
+
+```bash
+# Install Ollama from https://ollama.com/download, start it, then:
+ollama pull gemma4:e4b        # about 9.6 GB download; E4B needs roughly 10 GB of free RAM
+```
+
+Then set `VISION_PROVIDER=ollama` in `.env` (and optionally `OLLAMA_MODEL`, `OLLAMA_HOST`) and restart the backend. The tag `gemma4:e4b` was checked against the [Ollama library page](https://ollama.com/library/gemma4) on 2026-10-08 (other tags there: `e2b`, `12b`, `26b`, `31b`); pick one your machine can hold. On a machine without a GPU the first analysis loads the model and can be slow, so raise `GEMMA_TIMEOUT_SECONDS` if it times out.
+
 ### Checking that Gemma is ready
 
-The header of the app shows the active provider, the model name, and whether Ollama is reachable and the model is installed and loaded. The same information is at `GET /api/health`.
+The header of the app shows the provider (for example `gemini`), the model name and where it runs (`hosted via Gemini API`, or the local Ollama address), plus whether it is usable. The same information is at `GET /api/health`.
 
-If Ollama is not running, the model is not installed, or a request times out, **the app shows an error with setup instructions and does not analyze anything**. It never switches to another provider or to demo data on its own.
+If the Gemini key is missing or rejected, Ollama is not running, the model is not installed, or a request times out, **the app shows an error with setup instructions and does not analyze anything**. Neither `gemini` nor `ollama` ever switches to another provider or to demo data on its own.
 
 ## Providers
 
@@ -71,8 +80,8 @@ If Ollama is not running, the model is not installed, or a request times out, **
 
 | Value | What it is |
 | --- | --- |
-| `ollama` (default) | Local Gemma 4 through Ollama. |
-| `gemini` | Optional alternative: hosted Gemma 4 (`gemma-4-31b-it` or `gemma-4-26b-a4b-it`) through the Gemini API with `GEMINI_API_KEY`. The photo leaves your machine. |
+| `gemini` (set in `.env.example`) | Hosted Gemma 4 (`gemma-4-31b-it` or `gemma-4-26b-a4b-it`) through the Gemini API with `GEMINI_API_KEY`. The photo is sent to Google's API for the analysis. |
+| `ollama` | Optional local path: Gemma 4 (`gemma4:e4b` by default) through Ollama on your machine. This is also the server default if `VISION_PROVIDER` is not set at all. |
 | `demo` | **Tests only.** Scripted answers for the bundled synthetic demo images. No model runs. When active, the UI shows a persistent "DEMO MODE: no model is analyzing this image" banner and every observation is labelled demo data. It can only be enabled by setting `VISION_PROVIDER=demo`. |
 
 Each analysis sends one image with a configurable timeout (`GEMMA_TIMEOUT_SECONDS`, default 60 s) and is never retried automatically.
@@ -145,7 +154,7 @@ The suite covers: proposals and rejected observations never create edges; the re
 
 - Backend (`backend/requirements.txt`): FastAPI, Uvicorn, Pydantic, NetworkX, httpx, `opencv-python-headless`, NumPy, Pillow, python-multipart, and `google-genai` (only used for `VISION_PROVIDER=gemini`). Dev: pytest.
 - Frontend (`frontend/package.json`): React 19, TypeScript, Vite, `@vitejs/plugin-react`, and the self-hosted fonts Bricolage Grotesque and Atkinson Hyperlegible Next via Fontsource.
-- Runtime: Ollama and the `gemma4:e4b` model.
+- Runtime: the Gemini API (hosted path), or optionally Ollama with a Gemma 4 model such as `gemma4:e4b`.
 - Storage: SQLite (standard library) for templates and explicitly saved projects.
 
 ## Demo

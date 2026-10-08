@@ -296,7 +296,7 @@ class AnalyzeRequest(BaseModel):
 class ProviderInfo(BaseModel):
     name: Literal["ollama", "gemini", "demo"]
     model: Optional[str] = None  # None only for the demo provider (no model runs)
-    runtime: str  # e.g. "Ollama (local)", "Gemini API (hosted)", "demo (no model)"
+    runtime: str  # e.g. "Ollama (local)", "hosted via Gemini API", "demo (no model)"
     integration: str
     is_demo: bool
     detail: Optional[str] = None

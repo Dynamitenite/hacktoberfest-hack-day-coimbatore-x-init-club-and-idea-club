@@ -40,7 +40,7 @@ class GeminiProvider:
         self.info = ProviderInfo(
             name="gemini",
             model=settings.gemini_model,
-            runtime="Gemini API (hosted)",
+            runtime="hosted via Gemini API",
             integration=f"Gemini API via google-genai ({'Files API' if settings.gemini_image_input == 'files' else 'inline bytes'})",
             is_demo=False,
         )
