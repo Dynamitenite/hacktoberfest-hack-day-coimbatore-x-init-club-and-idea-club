@@ -169,3 +169,15 @@ def test_pin_label_with_misread_tilde_still_maps_to_d9(catalog):
     for label in ("9", "~9", "-9", "–9", "D9", " ~ 9 "):
         assert normalize_board_pin(label, uno) == "D9"
     assert normalize_board_pin("-", uno) is None and normalize_board_pin("A0", uno) is None
+
+
+def test_heavily_blurred_image_is_not_calibrated_as_ok(fixture_photo, board):
+    """A blurry photo must not give a clean grid: the user is asked to adjust instead (synthetic demo image, blurred by the test)."""
+    jpeg, meta = fixture_photo("corrected")
+    img = decode_bgr(jpeg)
+    pts = {k: Point(**v) for k, v in meta["landmarks"].items()}
+    assert calibrate(pts, img, board).status == "ok"  # control: the sharp image calibrates
+    blurred = cv2.GaussianBlur(img, (0, 0), 14)
+    result = calibrate(pts, blurred, board)
+    assert result.status in ("low_confidence", "failed")
+    assert result.messages

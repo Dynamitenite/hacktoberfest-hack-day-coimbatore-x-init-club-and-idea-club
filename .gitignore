@@ -11,3 +11,4 @@ backend/data/saved/
 *.log
 .DS_Store
 frontend/dist/
+docs/*.zip
