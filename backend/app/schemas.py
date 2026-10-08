@@ -267,6 +267,10 @@ class Observation(BaseModel):
     original_candidate: Optional[Candidate] = None
     original_source: Optional[ObservationSource] = None  # who proposed it before a user correction
     display_name: str = ""
+    # Which model and runtime proposed this (None for observations made by the user or by OpenCV alone).
+    model_name: Optional[str] = None
+    runtime: Optional[str] = None
+    is_demo_data: bool = False  # True when the proposal is a scripted test fixture, not model output
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
 
@@ -284,13 +288,14 @@ class NewObservationRequest(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
-    provider: Optional[Literal["gemma", "demo"]] = None
+    # The provider is chosen by the server operator (VISION_PROVIDER), never by the browser.
     accept_unverified_calibration: bool = False
 
 
 class ProviderInfo(BaseModel):
-    name: Literal["gemma", "demo"]
-    model: Optional[str] = None
+    name: Literal["ollama", "gemini", "demo"]
+    model: Optional[str] = None  # None only for the demo provider (no model runs)
+    runtime: str  # e.g. "Ollama (local)", "Gemini API (hosted)", "demo (no model)"
     integration: str
     is_demo: bool
     detail: Optional[str] = None

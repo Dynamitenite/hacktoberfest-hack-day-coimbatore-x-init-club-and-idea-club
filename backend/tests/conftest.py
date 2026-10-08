@@ -14,7 +14,7 @@ _TMP = tempfile.mkdtemp(prefix="wirewise-tests-")
 os.environ["WIREWISE_DB_PATH"] = f"{_TMP}/test.db"
 os.environ["WIREWISE_SAVED_DIR"] = f"{_TMP}/saved"
 os.environ["GEMINI_API_KEY"] = ""  # tests never reach the network
-os.environ["VISION_PROVIDER"] = "auto"
+os.environ["VISION_PROVIDER"] = "demo"  # explicit and test-only: the suite never loads a model
 
 from app.catalog import load_catalog, load_templates  # noqa: E402
 from app.image_processing import calibrate, decode_bgr  # noqa: E402

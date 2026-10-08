@@ -1,4 +1,4 @@
-"""Gemma adapter (with a fake client), response parsing, demo provider and normalisation."""
+"""Gemini + Ollama adapters (fake clients / mock transport), response parsing, demo provider and normalisation."""
 
 import json
 from types import SimpleNamespace
@@ -8,8 +8,8 @@ import pytest
 from app.config import Settings
 from app.image_processing import decode_bgr
 from app.schemas import Point
-from app.vision_provider import DemoProvider, GemmaProvider, ProposeContext, ProviderError, normalize, parse_response
-from app.vision_provider.gemma import _safe_error
+from app.vision_provider import DemoProvider, GeminiProvider, ProposeContext, ProviderError, normalize, parse_response
+from app.vision_provider.gemini import _safe_error
 
 
 class FakeFiles:
@@ -45,7 +45,7 @@ def make_ctx(template, catalog, fixture_photo, ok_calibration, name="seeded_wron
 
 
 def settings(**kw):
-    base = dict(gemini_api_key="TESTKEY123", gemma_model="gemma-4-31b-it", gemma_image_input="files")
+    base = dict(vision_provider="gemini", gemini_api_key="TESTKEY123", gemini_model="gemma-4-31b-it", gemini_image_input="files")
     base.update(kw)
     return Settings(**base)
 
@@ -61,7 +61,7 @@ GOOD = """Sure! ```json
 def test_gemma_uses_documented_model_files_api_and_deletes_upload(template, catalog, fixture_photo, ok_calibration):
     client = FakeClient(GOOD)
     ctx, _ = make_ctx(template, catalog, fixture_photo, ok_calibration)
-    raw = GemmaProvider(settings(), client=client).propose(ctx)
+    raw = GeminiProvider(settings(), client=client).propose(ctx)
     model, contents, config = client.models.calls[0]
     assert model == "gemma-4-31b-it"
     assert contents[0].name == "files/abc123" and isinstance(contents[1], str)  # image first, then the prompt
@@ -73,15 +73,15 @@ def test_gemma_uses_documented_model_files_api_and_deletes_upload(template, cata
 def test_gemma_inline_mode_does_not_upload(template, catalog, fixture_photo, ok_calibration):
     client = FakeClient(GOOD)
     ctx, _ = make_ctx(template, catalog, fixture_photo, ok_calibration)
-    GemmaProvider(settings(gemma_image_input="inline"), client=client).propose(ctx)
+    GeminiProvider(settings(gemini_image_input="inline"), client=client).propose(ctx)
     assert client.files.uploaded == []
 
 
 def test_gemma_rejects_unknown_model_and_missing_key():
     with pytest.raises(ProviderError):
-        GemmaProvider(settings(gemma_model="gemma-3-27b-it"), client=object())
+        GeminiProvider(settings(gemini_model="gemma-3-27b-it"), client=object())
     with pytest.raises(ProviderError, match="GEMINI_API_KEY"):
-        GemmaProvider(settings(gemini_api_key=""))
+        GeminiProvider(settings(gemini_api_key=""))
 
 
 def test_gemma_errors_never_leak_the_key(template, catalog, fixture_photo, ok_calibration):
@@ -92,16 +92,16 @@ def test_gemma_errors_never_leak_the_key(template, catalog, fixture_photo, ok_ca
 
     ctx, _ = make_ctx(template, catalog, fixture_photo, ok_calibration)
     with pytest.raises(ProviderError) as e:
-        GemmaProvider(settings(), client=Boom()).propose(ctx)
+        GeminiProvider(settings(), client=Boom()).propose(ctx)
     assert "TESTKEY123" not in e.value.message
-    assert "TESTKEY123" not in _safe_error(RuntimeError("TESTKEY123 timeout"), "TESTKEY123")
+    assert "TESTKEY123" not in _safe_error(RuntimeError("TESTKEY123 timeout"), "TESTKEY123")[0]
 
 
 def test_empty_or_garbage_responses_are_errors_not_guesses(template, catalog, fixture_photo, ok_calibration):
     ctx, _ = make_ctx(template, catalog, fixture_photo, ok_calibration)
     for text in ("", "I cannot help with that", "```json\n{not json}\n```"):
         with pytest.raises(ProviderError):
-            GemmaProvider(settings(), client=FakeClient(text)).propose(ctx)
+            GeminiProvider(settings(), client=FakeClient(text)).propose(ctx)
 
 
 def test_parse_drops_malformed_items_and_clamps_coordinates():
@@ -152,7 +152,7 @@ def test_demo_provider_is_labelled_and_pipeline_snaps_with_opencv(template, cata
     gnd_wire = next(o for o in obs if o.candidate_part_or_endpoint.endpoints.get("end_b") and o.candidate_part_or_endpoint.endpoints["end_b"].board_pin == "GND")
     assert gnd_wire.candidate_part_or_endpoint.endpoints["end_a"].hole == "a16"
     assert any(e.source == "opencv" and "snapped" in e.note for e in gnd_wire.evidence)
-    assert any("DEMO provider" in e.note for e in gnd_wire.evidence)
+    assert any("DEMO DATA" in e.note for e in gnd_wire.evidence)
 
 
 def test_demo_provider_refuses_unknown_photos(template, catalog, fixture_photo, ok_calibration):
@@ -162,7 +162,7 @@ def test_demo_provider_refuses_unknown_photos(template, catalog, fixture_photo, 
 
     other = cv2.imencode(".jpg", np.random.default_rng(0).integers(0, 255, (480, 640, 3), dtype=np.uint8))[1].tobytes()
     ctx.image_jpeg = other
-    with pytest.raises(ProviderError, match="bundled demo photos"):
+    with pytest.raises(ProviderError, match="bundled synthetic test photos"):
         DemoProvider().propose(ctx)
 
 

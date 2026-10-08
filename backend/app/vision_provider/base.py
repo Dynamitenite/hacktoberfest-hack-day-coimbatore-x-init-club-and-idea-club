@@ -32,12 +32,18 @@ def clean_text(value: Optional[str]) -> Optional[str]:
 
 
 class ProviderError(RuntimeError):
-    """A provider failed in a way the user can act on. ``message`` is safe to show."""
+    """A provider failed in a way the user can act on. ``message`` is safe to show.
 
-    def __init__(self, message: str, *, retriable: bool = False) -> None:
+    ``code`` is one of: ``unavailable`` (runtime not running / model missing / no key),
+    ``timeout``, ``bad_response`` (the model answered but not with usable JSON),
+    ``config``. None of these ever triggers a switch to another provider.
+    """
+
+    def __init__(self, message: str, *, retriable: bool = False, code: str = "failed") -> None:
         super().__init__(message)
         self.message = message
         self.retriable = retriable
+        self.code = code
 
 
 class RawEndpoint(BaseModel):

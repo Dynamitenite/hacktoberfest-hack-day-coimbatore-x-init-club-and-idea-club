@@ -20,6 +20,7 @@ from ..schemas import (
     Evidence,
     Observation,
     Point,
+    ProviderInfo,
 )
 from .base import ProposeContext, RawEndpoint, RawItem, RawProposals
 
@@ -122,9 +123,12 @@ def _resolve_endpoint(
 
 
 def normalize(
-    raw: RawProposals, ctx: ProposeContext, image_bgr: np.ndarray, source: str
+    raw: RawProposals, ctx: ProposeContext, image_bgr: np.ndarray, source: str, info: ProviderInfo | None = None
 ) -> list[Observation]:
-    """``source`` is ``gemma`` or ``demo``."""
+    """``source`` is ``gemma`` (any real Gemma 4 provider) or ``demo``.
+
+    ``info`` stamps every observation with the model name and runtime that proposed it.
+    """
     H = np.array(ctx.calibration.homography) if ctx.calibration.homography else None
     tpl, cat = ctx.template, ctx.catalog
     by_kind = {p.kind: p for p in cat.parts.values()}
@@ -133,11 +137,10 @@ def normalize(
         refs_by_part.setdefault(inst.part_id, []).append(inst.ref)
 
     out: list[Observation] = []
-    origin_note = (
-        "Proposed by Gemma 4 from the photo."
-        if source == "gemma"
-        else "DEMO provider: scripted fixture output in Gemma's response format. No model was called."
-    )
+    if source == "gemma":
+        origin_note = "Proposed by Gemma 4 from the photo" + (f" (model {info.model}, runtime {info.runtime})." if info else ".")
+    else:
+        origin_note = "DEMO DATA: scripted synthetic-fixture output in Gemma's response format. No model was called."
 
     def new_id() -> str:
         return "ob_" + uuid.uuid4().hex[:8]
@@ -245,4 +248,9 @@ def normalize(
                 display_name="Obscured / unclear area",
             )
         )
+    for o in out:  # provenance: which model and runtime proposed this (demo data is labelled as such, never as a model)
+        if info is not None:
+            o.model_name = info.model
+            o.runtime = info.runtime
+        o.is_demo_data = source == "demo"
     return out

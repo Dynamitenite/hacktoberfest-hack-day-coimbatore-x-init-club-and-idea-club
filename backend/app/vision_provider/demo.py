@@ -1,8 +1,10 @@
 """Deterministic demo provider.
 
-Serves recorded, Gemma-format proposals for the bundled synthetic photos so the
-whole flow works with no API key and no network. It never calls a model and it
-refuses photos it does not recognise rather than inventing observations.
+TEST-ONLY. Serves scripted, Gemma-format proposals for the bundled SYNTHETIC
+photos so automated tests run with no model and no network. It is active only
+when the operator explicitly sets VISION_PROVIDER=demo; no other failure can
+switch to it. It never calls a model and it refuses photos it does not
+recognise rather than inventing observations.
 """
 
 from __future__ import annotations
@@ -65,17 +67,18 @@ class DemoProvider:
         self.info = ProviderInfo(
             name="demo",
             model=None,
-            integration="Scripted fixtures in Gemma's response format (no model call)",
+            runtime="demo (no model)",
+            integration="Scripted synthetic fixtures in Gemma's response format (no model call)",
             is_demo=True,
-            detail="Demo mode: observations come from recorded fixtures for the bundled demo photos only.",
+            detail="DEMO MODE: no model is analyzing this image. Observations come from scripted fixtures for the bundled synthetic test photos only.",
         )
 
     def propose(self, ctx: ProposeContext) -> RawProposals:
         fid = ctx.fixture_id or match_fixture(ctx.image_jpeg)
         if not fid or fid not in list_fixtures():
             raise ProviderError(
-                "Demo mode only recognises the bundled demo photos. To analyse your own photo, "
-                "set GEMINI_API_KEY on the server and choose the Gemma provider."
+                "Demo mode only recognises the bundled synthetic test photos. To analyse a real photo, "
+                "stop the server and start it with VISION_PROVIDER=ollama (local Gemma 4)."
             )
         with open(list_fixtures()[fid]["_proposals"], encoding="utf-8") as fh:
             return RawProposals.model_validate(json.load(fh))

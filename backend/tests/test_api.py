@@ -1,4 +1,4 @@
-"""HTTP-level flow through the demo provider (no key, no network)."""
+"""HTTP-level flow. The suite runs with VISION_PROVIDER=demo set explicitly in conftest (no model, no network)."""
 
 import io
 
@@ -35,9 +35,10 @@ def review_all(client, sid, obs):
             assert client.patch(f"/api/sessions/{sid}/observations/{o['id']}", json={"action": action}).status_code == 200
 
 
-def test_health_reports_demo_mode_without_a_key(client):
+def test_health_reports_demo_mode_explicitly(client):
     h = client.get("/api/health").json()
-    assert h["default_provider"] == "demo" and h["demo_mode"] is True and h["gemma_available"] is False
+    assert h["provider"] == "demo" and h["demo_mode"] is True and h["model"] is None
+    assert "no model" in h["message"].lower()
 
 
 def test_unsupported_template_is_a_clear_404(client):
@@ -92,12 +93,6 @@ def test_analyze_requires_calibration_and_blocks_low_confidence(client):
     assert client.get(f"/api/sessions/{sid}/report").json()["overall_status"] != "MATCHES TEMPLATE"
 
 
-def test_gemma_provider_without_key_is_a_clean_error(client):
-    sid = calibrated(client)
-    r = client.post(f"/api/sessions/{sid}/analyze", json={"provider": "gemma"})
-    assert r.status_code == 400 and "GEMINI_API_KEY" in r.json()["detail"]
-
-
 def test_demo_provider_refuses_a_user_photo(client):
     buf = io.BytesIO()
     Image.new("RGB", (800, 600), (90, 90, 90)).save(buf, format="PNG")
@@ -107,7 +102,7 @@ def test_demo_provider_refuses_a_user_photo(client):
     pts = {"a1": {"x": 100, "y": 100}, "a30": {"x": 700, "y": 100}, "j30": {"x": 700, "y": 400}, "j1": {"x": 100, "y": 400}}
     client.post(f"/api/sessions/{sid}/calibrate", json={"points": pts})
     r = client.post(f"/api/sessions/{sid}/analyze", json={"accept_unverified_calibration": True})
-    assert r.status_code == 400 and "bundled demo photos" in r.json()["detail"]
+    assert r.status_code == 400 and "bundled synthetic test photos" in r.json()["detail"]
 
 
 def test_upload_validation_errors(client):

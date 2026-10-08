@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse
 from . import catalog as cat_mod
 from .catalog import hole_name, load_catalog, load_templates, normalize_board_pin, parse_hole
 from .comparison import compare
-from .config import ALLOWED_GEMMA_MODELS, settings
+from .config import settings
 from .image_processing import (
     ALLOWED_MIME,
     UploadError,
@@ -49,7 +49,7 @@ from .schemas import (
     utcnow,
 )
 from .storage import Database, SessionState, SessionStore
-from .vision_provider import ProposeContext, ProviderError, get_provider, list_fixtures, normalize
+from .vision_provider import OllamaProvider, ProposeContext, ProviderError, get_provider, list_fixtures, normalize
 
 PX_PER_PITCH = 28
 MARGIN_PITCH = 2.0
@@ -99,17 +99,6 @@ def _tpl(template_id: str):
             f"Unsupported circuit '{template_id}'. Wirewise only checks the preconfigured templates: {', '.join(load_templates())}.",
         )
     return tpl
-
-
-def _provider_summary(name: str) -> ProviderInfo:
-    if name == "demo":
-        return ProviderInfo(name="demo", model=None, integration="Scripted fixtures in Gemma's response format (no model call)", is_demo=True)
-    return ProviderInfo(
-        name="gemma",
-        model=settings.gemma_model,
-        integration=f"Gemini API via google-genai ({'Files API' if settings.gemma_image_input == 'files' else 'inline bytes'})",
-        is_demo=False,
-    )
 
 
 def _new_session(template_id: str, jpeg: bytes, width: int, height: int, fixture_id: str | None = None) -> SessionState:
@@ -173,15 +162,57 @@ def _calibrated(state: SessionState) -> CalibrationResult:
 # --------------------------------------------------------------------------- meta
 
 
+def _provider_health() -> dict:
+    """Active provider, model, and whether the model is reachable and loaded. Never runs inference."""
+    name = settings.vision_provider
+    base = {
+        "provider": name,
+        "model": None,
+        "runtime": None,
+        "demo_mode": name == "demo",
+        "reachable": False,
+        "model_installed": False,
+        "model_loaded": False,
+        "ready": False,
+        "message": "",
+        "setup_hint": None,
+    }
+    if name == "demo":
+        base.update(
+            runtime="demo (no model)",
+            message="DEMO MODE: no model is analyzing this image. Scripted synthetic fixtures only.",
+        )
+        return base
+    if name == "ollama":
+        provider = OllamaProvider(settings)
+        st = provider.status()
+        base.update(model=settings.ollama_model, runtime=provider.info.runtime, reachable=st.reachable,
+                    model_installed=st.model_installed, model_loaded=st.model_loaded)
+        if not st.reachable:
+            base.update(message=st.error or "Ollama is not reachable.", setup_hint=provider.setup_hint)
+        elif not st.model_installed:
+            base.update(message=f"Ollama is running but model '{settings.ollama_model}' is not installed.", setup_hint=provider.setup_hint)
+        elif not st.model_loaded:
+            base.update(ready=True, message="Model is installed and will be loaded on the first analysis (the first request is slower).")
+        else:
+            base.update(ready=True, message="Model is loaded and ready.")
+        return base
+    # gemini: reachability of a hosted API is not probed (no call, no cost); a key being present is the check.
+    base.update(model=settings.gemini_model, runtime="Gemini API (hosted)", reachable=bool(settings.gemini_api_key),
+                model_installed=bool(settings.gemini_api_key), model_loaded=bool(settings.gemini_api_key),
+                ready=bool(settings.gemini_api_key))
+    base["message"] = "API key configured (the hosted model is contacted only during an analysis)." if settings.gemini_api_key else "GEMINI_API_KEY is not set."
+    if not settings.gemini_api_key:
+        base["setup_hint"] = "Add GEMINI_API_KEY to .env, or use the local provider: VISION_PROVIDER=ollama."
+    return base
+
+
 @app.get("/api/health")
 def health():
     return {
         "status": "ok",
-        "default_provider": settings.default_provider,
-        "gemma_available": settings.gemma_available,
-        "gemma_model": settings.gemma_model,
-        "gemma_models_supported": sorted(ALLOWED_GEMMA_MODELS),
-        "demo_mode": settings.default_provider == "demo",
+        **_provider_health(),
+        "timeout_seconds": settings.gemma_timeout_s,
         "max_upload_mb": settings.max_upload_mb,
         "allowed_types": sorted(ALLOWED_MIME),
         "catalog_version": load_catalog().version,
@@ -206,13 +237,21 @@ def catalog_route():
     return cat_mod.catalog_payload()
 
 
+def _require_demo_mode() -> None:
+    if not settings.is_demo:
+        raise HTTPException(404, "Synthetic test fixtures are only available when the server is started with VISION_PROVIDER=demo.")
+
+
 @app.get("/api/fixtures")
 def fixtures():
+    if not settings.is_demo:
+        return []
     return [{k: v for k, v in f.items() if not k.startswith("_") and k != "landmarks"} for f in list_fixtures().values()]
 
 
 @app.get("/api/fixtures/{fixture_id}/image")
 def fixture_image(fixture_id: str):
+    _require_demo_mode()
     meta = list_fixtures().get(fixture_id)
     if not meta:
         raise HTTPException(404, "Unknown demo fixture.")
@@ -238,6 +277,7 @@ async def create_session(template_id: str = Form(...), file: UploadFile = File(.
 
 @app.post("/api/sessions/demo", response_model=ImageSession)
 def create_demo_session(body: dict):
+    _require_demo_mode()
     template_id, fixture_id = body.get("template_id"), body.get("fixture_id")
     _tpl(template_id or "")
     meta = list_fixtures().get(fixture_id or "")
@@ -315,7 +355,6 @@ def analyze(sid: str, body: AnalyzeRequest):
             409,
             "Calibration is low-confidence. Adjust the landmarks until the grid lines up, or explicitly accept it. " + " ".join(cal.messages),
         )
-    name = body.provider or settings.default_provider
     tpl = _tpl(state.session.circuit_template_id)
     catalog = load_catalog()
     img = decode_bgr(state.image_jpeg)
@@ -325,13 +364,16 @@ def analyze(sid: str, body: AnalyzeRequest):
         session_id=sid, template=tpl, catalog=catalog, image_jpeg=state.image_jpeg, annotated_jpeg=annotated,
         width=state.session.width, height=state.session.height, calibration=cal, fixture_id=state.session.fixture_id,
     )
+    name = settings.vision_provider
+    # Exactly the configured provider runs. A failure is reported to the user; it never switches provider.
     try:
-        provider = get_provider(name, settings)
+        provider = get_provider(settings)
         raw = provider.propose(ctx)
     except ProviderError as exc:
-        raise HTTPException(502 if exc.retriable else 400, exc.message) from exc
+        status = 503 if exc.code in ("unavailable", "timeout") else 502 if exc.retriable or exc.code == "bad_response" else 400
+        raise HTTPException(status, exc.message) from exc
 
-    proposals = normalize(raw, ctx, img, "demo" if name == "demo" else "gemma")
+    proposals = normalize(raw, ctx, img, "demo" if name == "demo" else "gemma", provider.info)
     outline = _outline_observation(sid, state)
     # Replace earlier model proposals; keep anything the user added by hand.
     state.observations = [o for o in state.observations if o.source == "user" and o.observation_type != "board"] + [outline] + proposals
@@ -340,7 +382,7 @@ def analyze(sid: str, body: AnalyzeRequest):
     if not proposals:
         warnings.append("The provider did not report any items. Check the photo guidance, or add observations manually.")
     if name == "demo":
-        warnings.append("DEMO MODE: these proposals are scripted fixtures, not a live Gemma call.")
+        warnings.append("DEMO MODE: no model is analyzing this image. These proposals are scripted synthetic fixtures.")
     return AnalyzeResponse(observations=state.observations, provider=provider.info, warnings=warnings)
 
 
