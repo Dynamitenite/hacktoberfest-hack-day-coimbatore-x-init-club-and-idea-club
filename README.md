@@ -4,7 +4,7 @@
 
 ## Team
 
-**Team Name:** [Team Name]
+**Team Name:** Team Vitality
 
 
 | Member | Contribution   |
