@@ -231,10 +231,10 @@ def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     corners = {name: hole_px(name) for name in ("a1", "a30", "j30", "j1")}
     specs = [
-        ("seeded_wrong_row", 16, "SYNTHETIC TEST FIXTURE: ground jumper in row 16",
-         "Synthetic render. The LED cathode is in row 15 but the ground jumper lands in row 16, so they are not connected."),
-        ("corrected", 15, "SYNTHETIC TEST FIXTURE: ground jumper in row 15",
-         "Synthetic render of the same circuit with the ground jumper moved to row 15."),
+        ("seeded_wrong_row", 16, "Synthetic demo image: ground jumper in row 16",
+         "Synthetic demo image (computer-generated, not a real photo). The LED cathode is in row 15 but the ground jumper lands in row 16, so they are not connected."),
+        ("corrected", 15, "Synthetic demo image: ground jumper in row 15",
+         "Synthetic demo image (computer-generated, not a real photo) of the same circuit with the ground jumper moved to row 15."),
     ]
     for fid, gnd_row, title, desc in specs:
         d = OUT / fid

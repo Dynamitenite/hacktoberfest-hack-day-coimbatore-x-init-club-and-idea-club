@@ -162,7 +162,7 @@ def test_demo_provider_refuses_unknown_photos(template, catalog, fixture_photo, 
 
     other = cv2.imencode(".jpg", np.random.default_rng(0).integers(0, 255, (480, 640, 3), dtype=np.uint8))[1].tobytes()
     ctx.image_jpeg = other
-    with pytest.raises(ProviderError, match="bundled synthetic test photos"):
+    with pytest.raises(ProviderError, match="bundled synthetic demo images"):
         DemoProvider().propose(ctx)
 
 

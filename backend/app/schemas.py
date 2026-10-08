@@ -213,6 +213,7 @@ class ImageSession(BaseModel):
     calibration_points: Optional[dict[str, Point]] = None
     calibration: Optional[CalibrationResult] = None
     fixture_id: Optional[str] = None
+    synthetic: bool = False  # True for the bundled computer-generated demo images; never a real photo
     suggested_landmarks: Optional[dict[str, Point]] = None
     created_at: datetime = Field(default_factory=utcnow)
     saved_project_id: Optional[str] = None

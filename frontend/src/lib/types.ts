@@ -72,6 +72,7 @@ export type Session = {
   width: number;
   height: number;
   fixture_id?: string | null;
+  synthetic?: boolean; // computer-generated demo image, never a real photo
   suggested_landmarks?: Record<string, Point> | null;
   calibration?: Calibration | null;
   calibration_points?: Record<string, Point> | null;
@@ -165,8 +166,7 @@ export type Diagram = {
   wires: { edge_id: string; points: [number, number][] }[];
 };
 
-export type Fixture = { id: string; title: string; description: string; synthetic: boolean };
-export type Sample = { id: string; title: string; description: string; filename: string };
+export type Sample = { id: string; title: string; description: string; filename: string; synthetic: boolean };
 export type Health = {
   status: string;
   provider: ProviderName;

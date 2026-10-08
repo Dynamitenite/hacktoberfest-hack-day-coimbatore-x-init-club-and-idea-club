@@ -108,7 +108,9 @@ def _tpl(template_id: str):
     return tpl
 
 
-def _new_session(template_id: str, jpeg: bytes, width: int, height: int, fixture_id: str | None = None) -> SessionState:
+def _new_session(
+    template_id: str, jpeg: bytes, width: int, height: int, fixture_id: str | None = None, synthetic: bool = False
+) -> SessionState:
     sid = "ses_" + uuid.uuid4().hex[:10]
     session = ImageSession(
         id=sid,
@@ -117,6 +119,7 @@ def _new_session(template_id: str, jpeg: bytes, width: int, height: int, fixture
         width=width,
         height=height,
         fixture_id=fixture_id,
+        synthetic=synthetic,
     )
     state = store.create(session, jpeg)
     if fixture_id:
@@ -266,28 +269,40 @@ def fixture_image(fixture_id: str):
     return Response(Path(meta["_photo"]).read_bytes(), media_type="image/jpeg")
 
 
-def _sample_path(sample_id: str) -> Path:
-    entry = SAMPLE_PHOTOS.get(sample_id)
-    path = settings.samples_dir / entry[0] if entry else None
-    if not entry or path is None or not path.is_file():
+def _sample_catalog() -> dict[str, dict]:
+    """Photos Wirewise can start a session from: real photos (if supplied) and the SYNTHETIC demo images."""
+    out: dict[str, dict] = {}
+    for sid, (filename, title, desc) in SAMPLE_PHOTOS.items():
+        path = settings.samples_dir / filename
+        if path.is_file():
+            out[sid] = {"title": title, "description": desc, "path": path, "synthetic": False, "fixture_id": None}
+    for fid, meta in list_fixtures().items():
+        out[f"synthetic_{fid}"] = {
+            "title": meta["title"], "description": meta["description"], "path": Path(meta["_photo"]),
+            "synthetic": True, "fixture_id": fid,
+        }
+    return out
+
+
+def _sample(sample_id: str) -> dict:
+    entry = _sample_catalog().get(sample_id)
+    if not entry:
         raise HTTPException(404, "Unknown sample photo.")
-    return path
+    return entry
 
 
 @app.get("/api/samples")
 def samples():
-    """Real sample photos found in the fixtures/ folder (never the synthetic test fixtures)."""
+    """Sample images. Computer-generated ones are flagged `synthetic` and titled "Synthetic demo image"."""
     return [
-        {"id": sid, "title": title, "description": desc, "filename": filename}
-        for sid, (filename, title, desc) in SAMPLE_PHOTOS.items()
-        if (settings.samples_dir / filename).is_file()
+        {"id": sid, "title": e["title"], "description": e["description"], "synthetic": e["synthetic"], "filename": e["path"].name}
+        for sid, e in _sample_catalog().items()
     ]
 
 
 @app.get("/api/samples/{sample_id}/image")
 def sample_image(sample_id: str):
-    path = _sample_path(sample_id)
-    return Response(path.read_bytes(), media_type="image/jpeg", headers={"Cache-Control": "no-store"})
+    return Response(_sample(sample_id)["path"].read_bytes(), media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
 
 # --------------------------------------------------------------------------- sessions
@@ -309,15 +324,15 @@ async def create_session(template_id: str = Form(...), file: UploadFile = File(.
 
 @app.post("/api/sessions/sample", response_model=ImageSession)
 def create_sample_session(body: dict):
-    """Start a normal session from one of the real sample photos (same validation as an upload)."""
+    """Start a normal session from a sample image (same validation, same analysis path as an upload)."""
     template_id = body.get("template_id")
     _tpl(template_id or "")
-    jpeg = _sample_path(str(body.get("sample_id") or "")).read_bytes()
+    entry = _sample(str(body.get("sample_id") or ""))
     try:
-        img = validate_and_normalize(jpeg, "image/jpeg", settings.max_upload_mb)
+        img = validate_and_normalize(entry["path"].read_bytes(), "image/jpeg", settings.max_upload_mb)
     except UploadError as exc:
         raise HTTPException(422, str(exc)) from exc
-    return _new_session(template_id, img.jpeg_bytes, img.width, img.height).session
+    return _new_session(template_id, img.jpeg_bytes, img.width, img.height, fixture_id=entry["fixture_id"], synthetic=entry["synthetic"]).session
 
 
 @app.post("/api/sessions/demo", response_model=ImageSession)
@@ -330,7 +345,7 @@ def create_demo_session(body: dict):
         raise HTTPException(404, "Unknown demo fixture.")
     jpeg = Path(meta["_photo"]).read_bytes()
     img = validate_and_normalize(jpeg, "image/jpeg", settings.max_upload_mb)
-    return _new_session(template_id, img.jpeg_bytes, img.width, img.height, fixture_id=fixture_id).session
+    return _new_session(template_id, img.jpeg_bytes, img.width, img.height, fixture_id=fixture_id, synthetic=True).session
 
 
 @app.get("/api/sessions/{sid}", response_model=ImageSession)

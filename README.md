@@ -73,7 +73,7 @@ If Ollama is not running, the model is not installed, or a request times out, **
 | --- | --- |
 | `ollama` (default) | Local Gemma 4 through Ollama. |
 | `gemini` | Optional alternative: hosted Gemma 4 (`gemma-4-31b-it` or `gemma-4-26b-a4b-it`) through the Gemini API with `GEMINI_API_KEY`. The photo leaves your machine. |
-| `demo` | **Tests only.** Scripted answers for the bundled *synthetic* test photos. No model runs. When active, the UI shows a persistent "DEMO MODE: no model is analyzing this image" banner and every observation is labelled demo data. It can only be enabled by setting `VISION_PROVIDER=demo`. |
+| `demo` | **Tests only.** Scripted answers for the bundled synthetic demo images. No model runs. When active, the UI shows a persistent "DEMO MODE: no model is analyzing this image" banner and every observation is labelled demo data. It can only be enabled by setting `VISION_PROVIDER=demo`. |
 
 Each analysis sends one image with a configurable timeout (`GEMMA_TIMEOUT_SECONDS`, default 60 s) and is never retried automatically.
 
@@ -96,7 +96,7 @@ What Gemma 4 does **not** do:
 
 Every proposal records and displays the model name and runtime that produced it.
 
-A saved real response from the local model is in [`docs/gemma_sample_response.json`](docs/gemma_sample_response.json) *(see "Status of the real-photo run" below)*.
+A saved real Gemma 4 response to a synthetic demo image is planned at `docs/gemma_sample_response.json`; see "Verification status" below for whether it exists yet.
 
 ## Supported hardware
 
@@ -119,16 +119,18 @@ Only low-voltage, allowlisted circuits are supported. Mains voltage, household w
 - Calibration is manual and assumes a roughly top-down photo of the whole board. Heavy glare, blur or a tilted board can fail the grid check.
 - A small local model is imprecise: expect missed items and wrong hole positions, which is why every proposal needs your confirmation and OpenCV snaps positions.
 - Photo guidance: whole breadboard in frame, mostly top-down, good light, no covered wires or labels.
+- Tested on synthetic fixtures; accuracy on real breadboard photos has not been validated.
 - `MATCHES TEMPLATE` means the visible, confirmed connections match the template. It is not a safety statement.
 
-## Photos and fixtures
+## Demo images and your own photos
 
-- **Real photos** (for the demo and manual testing) go in the repo-root [`fixtures/`](fixtures) folder as `correct.jpg`, `wrong_wire.jpg` and `blurry.jpg`. When present, the app offers them as sample photos on the first screen. They go through the same calibration and Gemma 4 analysis as an uploaded photo.
-- **Synthetic test fixtures** live in `backend/data/fixtures/` and are computer-generated renders used only by the automated tests and `VISION_PROVIDER=demo`. They are labelled `SYNTHETIC TEST FIXTURE` wherever they appear. Regenerate them with `python backend/scripts/generate_fixtures.py`.
+- **Synthetic demo images** are the bundled samples. They are computer-generated renders, **not real photos**, and are labelled "Synthetic demo image" in the UI, the API and the docs. Two exist: one with a seeded wrong-row mistake (ground jumper in row 16) and a corrected one (row 15). They live in `backend/data/fixtures/` (regenerate with `python backend/scripts/generate_fixtures.py`).
+- **Your own photo:** upload any JPEG, PNG or WebP on the first screen. It goes through the same calibration and Gemma 4 analysis. Accuracy on real breadboard photos has not been validated.
+- If you add real photos as `fixtures/correct.jpg`, `fixtures/wrong_wire.jpg` or `fixtures/blurry.jpg`, the app lists them as additional samples.
 
-## Status of the real-photo run
+## Verification status
 
-See [docs/STATUS.md](docs/STATUS.md) for what was verified against a real local Gemma 4 model and what was not.
+See [docs/STATUS.md](docs/STATUS.md) for exactly what was run against a real Gemma 4 model and what was not.
 
 ## Tests
 

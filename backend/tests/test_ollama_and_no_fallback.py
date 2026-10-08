@@ -271,19 +271,70 @@ def test_synthetic_fixtures_exist_only_in_explicit_demo_mode(client, monkeypatch
     r = client.post("/api/sessions/demo", json={"template_id": "uno_d9_led_220r", "fixture_id": "corrected"})
     assert r.status_code == 404
     assert all(f["synthetic"] for f in main.list_fixtures().values())
-    assert all(f["title"].startswith("SYNTHETIC") for f in main.list_fixtures().values())
+    assert all(f["title"].startswith("Synthetic demo image") for f in main.list_fixtures().values())
+
+
+def real(listed):
+    return [x for x in listed if not x["synthetic"]]
 
 
 def test_real_sample_photos_are_listed_only_when_present(client, monkeypatch, tmp_path, fixture_photo):
     monkeypatch.setattr(main, "settings", replace(main.settings, samples_dir=tmp_path))
-    assert client.get("/api/samples").json() == []
+    assert real(client.get("/api/samples").json()) == []
     assert client.get("/api/samples/correct/image").status_code == 404
     jpeg, _ = fixture_photo("corrected")  # stand-in bytes: the endpoint logic does not care what the photo shows
     (tmp_path / "correct.jpg").write_bytes(jpeg)
-    listed = client.get("/api/samples").json()
+    listed = real(client.get("/api/samples").json())
     assert [s["id"] for s in listed] == ["correct"] and listed[0]["filename"] == "correct.jpg"
     assert client.get("/api/samples/correct/image").status_code == 200
     r = client.post("/api/sessions/sample", json={"template_id": "uno_d9_led_220r", "sample_id": "correct"})
-    assert r.status_code == 200 and r.json()["fixture_id"] is None  # a normal session, not a synthetic-fixture one
+    assert r.status_code == 200 and r.json()["fixture_id"] is None and r.json()["synthetic"] is False
     assert client.post("/api/sessions/sample", json={"template_id": "uno_d9_led_220r", "sample_id": "../etc"}).status_code == 404
     assert client.post("/api/sessions/sample", json={"template_id": "nope", "sample_id": "correct"}).status_code == 404
+
+
+def test_synthetic_demo_images_are_always_offered_and_always_labelled(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(main, "settings", replace(main.settings, vision_provider="ollama", samples_dir=tmp_path))
+    listed = client.get("/api/samples").json()
+    assert {s["id"] for s in listed} == {"synthetic_seeded_wrong_row", "synthetic_corrected"}
+    assert all(s["synthetic"] and s["title"].startswith("Synthetic demo image") for s in listed)
+    assert all("not a real photo" in s["description"] for s in listed)
+    r = client.post("/api/sessions/sample", json={"template_id": "uno_d9_led_220r", "sample_id": "synthetic_corrected"})
+    assert r.status_code == 200 and r.json()["synthetic"] is True
+
+
+def test_synthetic_demo_image_goes_through_the_real_provider_not_scripted_data(client, monkeypatch, tmp_path):
+    cfg = replace(main.settings, vision_provider="ollama", ollama_host="http://ollama.test", ollama_model=MODEL, samples_dir=tmp_path)
+    monkeypatch.setattr(main, "settings", cfg)
+    fake = FakeOllama()
+    monkeypatch.setattr(main, "get_provider", lambda s: OllamaProvider(s, transport=fake.transport))
+    s = client.post("/api/sessions/sample", json={"template_id": "uno_d9_led_220r", "sample_id": "synthetic_seeded_wrong_row"}).json()
+    assert client.post(f"/api/sessions/{s['id']}/calibrate", json={"points": s["suggested_landmarks"]}).json()["status"] == "ok"
+    body = client.post(f"/api/sessions/{s['id']}/analyze", json={}).json()
+    assert body["provider"]["name"] == "ollama" and not any(o["is_demo_data"] for o in body["observations"])
+    assert len([r for r in fake.requests if r.url.path == "/api/generate"]) == 1
+
+
+def test_an_arbitrary_uploaded_image_works_end_to_end(client, monkeypatch):
+    """A judge can upload any photo: upload, calibrate, analyze through the real provider, review, report."""
+    import io
+
+    import numpy as np
+    from PIL import Image
+
+    cfg = replace(main.settings, vision_provider="ollama", ollama_host="http://ollama.test", ollama_model=MODEL)
+    monkeypatch.setattr(main, "settings", cfg)
+    fake = FakeOllama()
+    monkeypatch.setattr(main, "get_provider", lambda s: OllamaProvider(s, transport=fake.transport))
+    rng = np.random.default_rng(1)
+    buf = io.BytesIO()
+    Image.fromarray(rng.integers(0, 255, (600, 800, 3), dtype=np.uint8)).save(buf, format="JPEG")
+    up = client.post("/api/sessions", data={"template_id": "uno_d9_led_220r"}, files={"file": ("mine.jpg", buf.getvalue(), "image/jpeg")})
+    assert up.status_code == 200 and up.json()["synthetic"] is False
+    sid = up.json()["id"]
+    pts = {"a1": {"x": 100, "y": 100}, "a30": {"x": 700, "y": 100}, "j30": {"x": 700, "y": 400}, "j1": {"x": 100, "y": 400}}
+    client.post(f"/api/sessions/{sid}/calibrate", json={"points": pts})
+    r = client.post(f"/api/sessions/{sid}/analyze", json={"accept_unverified_calibration": True})
+    assert r.status_code == 200 and r.json()["provider"]["name"] == "ollama"
+    rep = client.get(f"/api/sessions/{sid}/report").json()
+    assert rep["overall_status"] == "NEEDS REVIEW"  # nothing confirmed, grid unverified: never a pass

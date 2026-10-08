@@ -1,5 +1,5 @@
 import type {
-  AnalyzeResponse, Calibration, Candidate, Fixture, Health, Observation, Point, Report, Sample, Session, TemplateDetail, TemplateSummary,
+  AnalyzeResponse, Calibration, Candidate, Health, Observation, Point, Report, Sample, Session, TemplateDetail, TemplateSummary,
 } from "./types";
 
 export class ApiError extends Error {
@@ -43,7 +43,6 @@ export const api = {
   health: () => call<Health>("/api/health"),
   templates: () => call<TemplateSummary[]>("/api/templates"),
   template: (id: string) => call<TemplateDetail>(`/api/templates/${id}`),
-  fixtures: () => call<Fixture[]>("/api/fixtures"),
   upload: (templateId: string, file: File) => {
     const fd = new FormData();
     fd.append("template_id", templateId);
@@ -54,8 +53,6 @@ export const api = {
   sampleImageUrl: (id: string) => `/api/samples/${id}/image`,
   sampleSession: (templateId: string, sampleId: string) =>
     call<Session>("/api/sessions/sample", json("POST", { template_id: templateId, sample_id: sampleId })),
-  demoSession: (templateId: string, fixtureId: string) =>
-    call<Session>("/api/sessions/demo", json("POST", { template_id: templateId, fixture_id: fixtureId })),
   deleteSession: (sid: string) => call<void>(`/api/sessions/${sid}`, { method: "DELETE" }),
   imageUrl: (sid: string) => `/api/sessions/${sid}/image`,
   rectifiedUrl: (sid: string, nonce: number) => `/api/sessions/${sid}/rectified.jpg?n=${nonce}`,

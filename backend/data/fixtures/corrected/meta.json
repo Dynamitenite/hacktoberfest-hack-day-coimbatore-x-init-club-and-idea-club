@@ -1,7 +1,7 @@
 {
   "id": "corrected",
-  "title": "SYNTHETIC TEST FIXTURE: ground jumper in row 15",
-  "description": "Synthetic render of the same circuit with the ground jumper moved to row 15.",
+  "title": "Synthetic demo image: ground jumper in row 15",
+  "description": "Synthetic demo image (computer-generated, not a real photo) of the same circuit with the ground jumper moved to row 15.",
   "template_id": "uno_d9_led_220r",
   "width": 1280,
   "height": 960,

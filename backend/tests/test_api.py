@@ -102,7 +102,7 @@ def test_demo_provider_refuses_a_user_photo(client):
     pts = {"a1": {"x": 100, "y": 100}, "a30": {"x": 700, "y": 100}, "j30": {"x": 700, "y": 400}, "j1": {"x": 100, "y": 400}}
     client.post(f"/api/sessions/{sid}/calibrate", json={"points": pts})
     r = client.post(f"/api/sessions/{sid}/analyze", json={"accept_unverified_calibration": True})
-    assert r.status_code == 400 and "bundled synthetic test photos" in r.json()["detail"]
+    assert r.status_code == 400 and "bundled synthetic demo images" in r.json()["detail"]
 
 
 def test_upload_validation_errors(client):

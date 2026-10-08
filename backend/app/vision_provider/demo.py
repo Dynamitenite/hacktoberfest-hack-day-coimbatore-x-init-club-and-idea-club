@@ -70,14 +70,14 @@ class DemoProvider:
             runtime="demo (no model)",
             integration="Scripted synthetic fixtures in Gemma's response format (no model call)",
             is_demo=True,
-            detail="DEMO MODE: no model is analyzing this image. Observations come from scripted fixtures for the bundled synthetic test photos only.",
+            detail="DEMO MODE: no model is analyzing this image. Observations come from scripted fixtures for the bundled synthetic demo images only.",
         )
 
     def propose(self, ctx: ProposeContext) -> RawProposals:
         fid = ctx.fixture_id or match_fixture(ctx.image_jpeg)
         if not fid or fid not in list_fixtures():
             raise ProviderError(
-                "Demo mode only recognises the bundled synthetic test photos. To analyse a real photo, "
+                "Demo mode only recognises the bundled synthetic demo images. To analyse a real photo, "
                 "stop the server and start it with VISION_PROVIDER=ollama (local Gemma 4)."
             )
         with open(list_fixtures()[fid]["_proposals"], encoding="utf-8") as fh:

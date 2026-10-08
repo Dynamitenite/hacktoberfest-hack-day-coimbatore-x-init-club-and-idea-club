@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import type {
-  Calibration, Candidate, Fixture, Health, Observation, Point, ProviderInfo, Report, Sample, Session, TemplateDetail, TemplateSummary,
+  Calibration, Candidate, Health, Observation, Point, ProviderInfo, Report, Sample, Session, TemplateDetail, TemplateSummary,
 } from "@/lib/types";
 import FindingsPanel from "./FindingsPanel";
 import ModelStatus from "./ModelStatus";
@@ -33,8 +33,7 @@ function defaultLandmarks(w: number, h: number): Record<string, Point> {
 export default function WirewiseApp() {
   const [health, setHealth] = useState<Health | null>(null);
   const [templates, setTemplates] = useState<TemplateSummary[]>([]);
-  const [fixtures, setFixtures] = useState<Fixture[]>([]); // synthetic test fixtures, served only in explicit demo mode
-  const [samples, setSamples] = useState<Sample[]>([]); // real sample photos from the repo's fixtures/ folder
+  const [samples, setSamples] = useState<Sample[]>([]); // bundled sample images: synthetic demo images, plus real photos if supplied
   const [checkingHealth, setCheckingHealth] = useState(false);
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [detail, setDetail] = useState<TemplateDetail | null>(null);
@@ -69,10 +68,9 @@ export default function WirewiseApp() {
   useEffect(() => {
     (async () => {
       try {
-        const [h, t, f, sm] = await Promise.all([api.health(), api.templates(), api.fixtures(), api.samples()]);
+        const [h, t, sm] = await Promise.all([api.health(), api.templates(), api.samples()]);
         setHealth(h);
         setTemplates(t);
-        setFixtures(f);
         setSamples(sm);
         if (t[0]) setTemplateId(t[0].id);
       } catch (e) {
@@ -146,13 +144,7 @@ export default function WirewiseApp() {
   const startFromSample = async (sm: Sample) => {
     if (!templateId) return;
     const s = await run("upload", () => api.sampleSession(templateId, sm.id));
-    if (s) beginSession(s, "Sample photo loaded. Drag the four handles onto the corner holes, then check the grid.");
-  };
-
-  const startFromFixture = async (f: Fixture) => {
-    if (!templateId) return;
-    const s = await run("upload", () => api.demoSession(templateId, f.id));
-    if (s) beginSession(s, "Demo photo loaded. The corner handles are pre-placed; check them like you would on your own photo.");
+    if (s) beginSession(s, s.synthetic ? "Synthetic demo image loaded (computer-generated, not a real photo). The corner handles are pre-placed; check them like you would on your own photo." : "Sample photo loaded. Drag the four handles onto the corner holes, then check the grid.");
   };
 
   const startOver = async () => {
@@ -306,7 +298,7 @@ export default function WirewiseApp() {
     <>
       {demoActive && (
         <div className="demo-band" role="status">
-          DEMO MODE: no model is analyzing this image. Observations are scripted demo data for the bundled SYNTHETIC test photos only.
+          DEMO MODE: no model is analyzing this image. Observations are scripted demo data for the bundled synthetic demo images only.
         </div>
       )}
       <header className="topbar">
@@ -439,33 +431,18 @@ export default function WirewiseApp() {
 
               {samples.length > 0 && (
                 <section className="panel" aria-labelledby="sample-h">
-                  <h2 id="sample-h">Or start from a sample photo</h2>
-                  <p className="small muted" style={{ margin: "6px 0 10px" }}>Real photos of the physical build, bundled with Wirewise. They go through the same calibration and Gemma 4 analysis as your own photo.</p>
+                  <h2 id="sample-h">Or try a sample image</h2>
+                  <p className="small muted" style={{ margin: "6px 0 10px" }}>
+                    Images marked <strong>Synthetic demo image</strong> are computer-generated, not real photos. Every sample goes through the same calibration and analysis as a photo you upload.
+                  </p>
                   <div className="stack" style={{ gap: 10 }}>
                     {samples.map((sm) => (
                       <button key={sm.id} type="button" className="fixture" disabled={busy === "upload"} onClick={() => startFromSample(sm)}>
                         <img src={api.sampleImageUrl(sm.id)} alt="" />
                         <span>
-                          <strong>{sm.title}</strong>
+                          {sm.synthetic ? <span className="badge" data-tone="warn" style={{ marginBottom: 4 }}>Synthetic demo image</span> : null}
+                          <strong style={{ display: "block" }}>{sm.title}</strong>
                           <span className="small muted" style={{ display: "block" }}>{sm.description}</span>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {health.demo_mode && fixtures.length > 0 && (
-                <section className="panel" aria-labelledby="demo-h">
-                  <h2 id="demo-h">Synthetic test photos (demo mode only)</h2>
-                  <p className="small muted" style={{ margin: "6px 0 10px" }}>Computer-generated renders used for automated testing. No model analyzes them: their observations are scripted.</p>
-                  <div className="stack" style={{ gap: 10 }}>
-                    {fixtures.map((f) => (
-                      <button key={f.id} type="button" className="fixture" disabled={busy === "upload"} onClick={() => startFromFixture(f)}>
-                        <img src={`/api/fixtures/${f.id}/image`} alt="" />
-                        <span>
-                          <strong>{f.title}</strong>
-                          <span className="small muted" style={{ display: "block" }}>{f.description}</span>
                         </span>
                       </button>
                     ))}
@@ -483,6 +460,7 @@ export default function WirewiseApp() {
               <section className="panel" aria-labelledby="photo-h" ref={photoRef}>
                 <div className="panel-head">
                   <h2 id="photo-h">{analyzed ? "Review what Gemma proposed" : "Mark the breadboard corners"}</h2>
+                  {session.synthetic ? <span className="badge" data-tone="warn">Synthetic demo image</span> : null}
                   {analyzed && provider ? (
                     <span className="badge" data-tone={provider.is_demo ? "warn" : "plain"}>
                       {provider.is_demo ? "DEMO DATA: no model ran" : `Proposed by Gemma 4 · ${provider.model} · ${provider.runtime}`}
@@ -591,7 +569,7 @@ export default function WirewiseApp() {
                   </div>
                   {warnings.map((w) => <p key={w} className="small" style={{ marginBottom: 6, fontWeight: 600, color: "var(--warn)" }}>{w}</p>)}
                   <p className="small muted" style={{ marginBottom: 12 }}>
-                    {provider?.is_demo ? "DEMO DATA: these proposals are scripted for a synthetic test photo; no model analyzed anything. " : `Gemma 4 (${provider?.model}, ${provider?.runtime}) looked at the photo and proposed these. `}
+                    {provider?.is_demo ? "DEMO DATA: these proposals are scripted for a synthetic demo image; no model analyzed anything. " : `Gemma 4 (${provider?.model}, ${provider?.runtime}) looked at the photo and proposed these. `}
                     Nothing becomes part of the circuit until you confirm it. Wirewise, not the model, decides what differs from the template.
                   </p>
                   <div className="btn-row" style={{ marginBottom: 14 }}>
@@ -628,7 +606,8 @@ export default function WirewiseApp() {
             <div className="stack">
               <section className="panel" aria-labelledby="ev-h" ref={photoRef}>
                 <div className="panel-head">
-                  <h2 id="ev-h">Evidence on your photo</h2>
+                  <h2 id="ev-h">{session.synthetic ? "Evidence on the synthetic demo image" : "Evidence on your photo"}</h2>
+                  {session.synthetic ? <span className="badge" data-tone="warn">Synthetic demo image</span> : null}
                   <div className="btn-row">
                     <button className="btn btn-small" type="button" onClick={() => setStep(2)}>Edit observations</button>
                     <button className="btn btn-small btn-quiet" type="button" onClick={refreshReport}>Re-run check</button>
