@@ -2,7 +2,7 @@
 
 ## Hacktoberfest Hack Day — Coimbatore 2026
 
-This file is the single source of truth for coding agents working in this repository, including Claude Code, OpenAI Codex, Gemini CLI, Cursor, Windsurf, Aider, RooCode, and other agentic development tools.
+This file is the single source of truth for coding agents working in this repository, including OpenAI Codex, Gemini CLI, Cursor, Windsurf, Aider, RooCode, and other agentic development tools.
 
 Read this file before making changes to the repository.
 
